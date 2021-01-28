@@ -1,5 +1,6 @@
 module consistent_hashing_ring
 
-greet() = print("Hello World!")
+hash_num(x) = mod(x, 5)
+println("===============", hash_num(23))
 
-end # module
+end
