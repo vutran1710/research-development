@@ -15,7 +15,9 @@ end
 
 
 # SETUP ===============================================================
-make_servers(number::Integer) = map(Server, 1:number)
+function make_servers(number::Integer)
+    map(Server, 1:number)
+end
 
 function distribute(servers::Array{Server})
     count = length(servers)
@@ -25,8 +27,8 @@ function distribute(servers::Array{Server})
     deg_range = 360 / count
     # Each server-id will be assocciated with a degree-fragment
     # defined as [Lower-Degree; Lower-Degree + Deg-Range]
-    plot_server(idx) = [idx * deg_range, servers[idx+1].id]
-    ring = [plot_server(i) for i in range(0, length=count)]
+    plot_server(idx) = [(idx-1) * deg_range, servers[idx].id]
+    ring = map(plot_server, 1:count)
     return ring
 end
 
