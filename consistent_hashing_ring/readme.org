@@ -1,3 +1,16 @@
+** Prepare
+   - Input required:
+     1. number of cache-server
+   - Work:
+     1. Generate dummy data
+     2. Setting caching-server-ring map
+
+** Run
+   - Fire requests
+   - Randomly fail *n* servers
+   - Fire requests again, print changes/rehashing
+
+** Setup
 #+begin_src shell
 $ cd consistent_hashing_ring
 $ julia --project=.
