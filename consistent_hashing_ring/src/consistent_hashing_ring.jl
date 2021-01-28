@@ -6,10 +6,16 @@ protocol = MySQL.API.MYSQL_PROTOCOL_TCP
 ports = [3300 + i for i in range(0, length=2)]
 println(ports)
 
-make_conn(port) = DBInterface.connect(MySQL.Connection, host, usr, pwd, db=db, port=port, protocol=protocol)
-DSS = Dict(i => make_conn(ports[i]) for i in range(1, length=length(ports)))
+make_conn(port) = DBInterface.connect(
+    MySQL.Connection,
+    host, usr, pwd,
+    db=db, port=port, protocol=protocol,
+)
 
-db_exec(conn, sql) = println(DBInterface.execute(conn::MySQL.Connection, sql))
-db_exec(DSS[1], "select 1 + 1;")
+conns = Dict(port => make_conn(port) for port in ports)
+sql_exec(conn, sql) = DBInterface.execute(conn::MySQL.Connection, sql)
+
+text_cur = sql_exec(conns[3300], "select 1 + 1;")
+println(text_cur)
 
 end
