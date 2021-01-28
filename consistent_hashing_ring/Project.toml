@@ -1,0 +1,7 @@
+name = "consistent_hashing_ring"
+uuid = "fe116a72-f159-4532-a410-2a15d3788973"
+authors = ["vutr <me@vutr.io>"]
+version = "0.1.0"
+
+[deps]
+Pipe = "b98c9c47-44ae-5843-9183-064241ee97a0"
