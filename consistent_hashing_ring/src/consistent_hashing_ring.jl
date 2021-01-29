@@ -14,7 +14,7 @@ end
 struct Server
     id::String
     bucket::Bucket
-    Server(_...) = new(string(uuid1()))
+    Server(_...) = new(string(uuid1())[end-5:end])
 end
 
 
@@ -35,36 +35,35 @@ end
 function derive_labels(server_ring::Array, label_count::Integer)
     count = length(server_ring)
     deg_block = 360 / count
-    step_deg = deg_block * 4 / 3
+    step_deg = 360 / count / label_count
     distribute(s) = map(i -> [s[1] + i * step_deg, s[2]] , 1:label_count)
     map(distribute, server_ring)
 end
 
 
 servers = make_servers(5)
-println(length(servers))
+# println(length(servers))
 
 ring = place_servers_over_ring(servers)
-println(json(ring, 2))
+# println(json(ring, 2))
 @assert length(ring) == 5
 
-labels = derive_labels(ring, 10)
-println(json(labels, 2))
+label_count = 5
+labels = derive_labels(ring, label_count)
+# println(json(labels, 2))
 @assert length(labels) == 5
 
 # # Plotting
 colors = [:blue, :orange, :green, :red, :black, :yellow]
 color_idx = 1
-
-
-plot(sin, cos, 0, 2π, show=true)
+plot(sin, cos, 0, 2π, show=true, aspect_ratio=1)
 
 for group in labels
     x_series = []
     y_series = []
     label = ""
 
-    global color_idx
+    global color_idx, label_count
     color = colors[color_idx]
 
     for point in group
@@ -74,7 +73,14 @@ for group in labels
         push!(y_series, cos(angle))
     end
 
-    scatter!(x_series, y_series, markersize=12, label=label, c=color)
+    scatter!(
+        x_series,
+        y_series,
+        markersize=15,
+        label=label,
+        c=color,
+        series_annotations=["$(label)__$(x)" for x ∈ 1:label_count],
+    )
     color_idx += 1
 end
 
