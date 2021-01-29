@@ -3,7 +3,7 @@ using UUIDs: uuid1, UUID
 using JSON
 using Plots
 
-pyplot()
+inspectdr()
 
 
 # MODELS ===============================================================
@@ -56,6 +56,9 @@ println(json(labels, 2))
 colors = [:blue, :orange, :green, :red, :black, :yellow]
 color_idx = 1
 
+
+plot(sin, cos, 0, 2π, show=true)
+
 for group in labels
     x_series = []
     y_series = []
@@ -71,11 +74,10 @@ for group in labels
         push!(y_series, cos(angle))
     end
 
-    display(scatter!(x_series, y_series, markersize=12, label=label, c=color))
-
+    scatter!(x_series, y_series, markersize=12, label=label, c=color)
     color_idx += 1
-
 end
+
 
 readline()
 
