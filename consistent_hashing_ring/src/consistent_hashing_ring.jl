@@ -4,7 +4,7 @@ using JSON
 using Plots
 using Colors
 
-inspectdr()
+pyplot()
 
 
 # MODELS ===============================================================
@@ -23,10 +23,6 @@ end
 make_servers(count) = map(Server, 1:count)
 
 function place_servers_over_ring(servers::Array{Server})
-    """
-    Each server-id will be assocciated with a degree-anchor
-    defined as [anchor-degree; server]
-    """
     count = length(servers)
     deg_block = 360 / count
     place(idx) = [(idx - 1) * deg_block, servers[idx].id]
@@ -43,26 +39,24 @@ end
 
 
 # RUNNING ==============================================================
-servers = make_servers(5)
-# println(length(servers))
+# ----------- config
+server_count = 3
+label_count = 1
 
+# ----------- setup
+servers = make_servers(3)
 ring = place_servers_over_ring(servers)
-# println(json(ring, 2))
-@assert length(ring) == 5
-
-label_count = 5
 labels = derive_labels(ring, label_count)
-color_generator = Iterators.Stateful(distinguishable_colors(label_count))
-# println(json(labels, 2))
-@assert length(labels) == 5
+color_generator = Iterators.Stateful(distinguishable_colors(server_count))
 
-# Plotting
+# ----------- plotting setup
+default(legendfontsize = 16, framestyle = :zerolines)
 plot(sin, cos, 0, 2π, aspect_ratio=1, show=true, alpha=0.6)
 
+# ----------- plotting servers
 for group in labels
     x_series, y_series = [], []
     label = group[1][2]
-    annotations = ["$(label)__$(x)" for x ∈ 1:label_count]
 
     for point in group
         angle = point[1]
@@ -73,15 +67,15 @@ for group in labels
     scatter!(
         x_series,
         y_series,
-        markersize=15,
+        markersize=16,
         label=label,
         c=popfirst!(color_generator),
-        series_annotations=annotations,
         alpha=0.7,
     )
 
 end
 
+# NOTE: keeping the plotting-window open until user provide some input
 readline()
 
 end
