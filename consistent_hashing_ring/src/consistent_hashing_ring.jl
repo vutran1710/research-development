@@ -50,8 +50,8 @@ labels = derive_labels(ring, label_count)
 color_generator = Iterators.Stateful(distinguishable_colors(server_count))
 
 # ----------- plotting setup
-default(legendfontsize = 16, framestyle = :zerolines)
-plot(sin, cos, 0, 2π, aspect_ratio=1, show=true, alpha=0.6)
+default(legendfontsize=16, framestyle=:zerolines, tickfont=(12, :white))
+plot(sin, cos, 0, 2π, aspect_ratio=1, show=true, label=false)
 
 # ----------- plotting servers
 for group in labels
@@ -67,10 +67,9 @@ for group in labels
     scatter!(
         x_series,
         y_series,
-        markersize=16,
+        markersize=20,
         label=label,
         c=popfirst!(color_generator),
-        alpha=0.7,
     )
 
 end
