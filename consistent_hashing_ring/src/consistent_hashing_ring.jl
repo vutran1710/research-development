@@ -2,6 +2,7 @@ module main
 using UUIDs: uuid1, UUID
 using JSON
 using Plots
+using Colors
 
 inspectdr()
 
@@ -41,6 +42,7 @@ function derive_labels(server_ring::Array, label_count::Integer)
 end
 
 
+# RUNNING ==============================================================
 servers = make_servers(5)
 # println(length(servers))
 
@@ -50,25 +52,20 @@ ring = place_servers_over_ring(servers)
 
 label_count = 5
 labels = derive_labels(ring, label_count)
+color_generator = Iterators.Stateful(distinguishable_colors(label_count))
 # println(json(labels, 2))
 @assert length(labels) == 5
 
-# # Plotting
-colors = [:blue, :orange, :green, :red, :black, :yellow]
-color_idx = 1
-plot(sin, cos, 0, 2π, show=true, aspect_ratio=1)
+# Plotting
+plot(sin, cos, 0, 2π, aspect_ratio=1, show=true, alpha=0.6)
 
 for group in labels
-    x_series = []
-    y_series = []
-    label = ""
-
-    global color_idx, label_count
-    color = colors[color_idx]
+    x_series, y_series = [], []
+    label = group[1][2]
+    annotations = ["$(label)__$(x)" for x ∈ 1:label_count]
 
     for point in group
         angle = point[1]
-        label = point[2]
         push!(x_series, sin(angle))
         push!(y_series, cos(angle))
     end
@@ -78,12 +75,12 @@ for group in labels
         y_series,
         markersize=15,
         label=label,
-        c=color,
-        series_annotations=["$(label)__$(x)" for x ∈ 1:label_count],
+        c=popfirst!(color_generator),
+        series_annotations=annotations,
+        alpha=0.7,
     )
-    color_idx += 1
-end
 
+end
 
 readline()
 
