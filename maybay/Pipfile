@@ -1,0 +1,22 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+matplotlib = "*"
+icecream = "*"
+emoji = "*"
+
+[scripts]
+app = "python main.py"
+
+[requires]
+python_version = "3.9"
+
+[dev-packages]
+jedi = "*"
+black = "*"
+
+[pipenv]
+allow_prereleases = true
