@@ -5,7 +5,7 @@
      1. Generate dummy data
      2. Setting caching-server-ring map
 
-** Run
+** Scenario
    - Fire requests
    - Randomly fail *n* servers
    - Fire requests again, print changes/rehashing
@@ -21,3 +21,16 @@ Running
 #+begin_src shell
 $ julia --project=. src/consistent_hashing_ring.jl
 #+end_src
+
+** Architecture
+
+- Data
+#+begin_src json
+Record<Person> {
+   id: Integer
+   name: String
+}
+#+end_src
+
+- Single **PersistentStorage** to store data<Record[]>
+- Multi CacheServer to serve requests

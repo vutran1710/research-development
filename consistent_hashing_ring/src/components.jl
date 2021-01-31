@@ -1,3 +1,4 @@
+using UUIDs: uuid1, UUID
 using Faker
 
 LIMIT = 10000
@@ -9,6 +10,19 @@ struct Record
     name::String
 end
 
+
+mutable struct Bucket
+    data::Array{Record}
+end
+
+
+struct CacheServer
+    id::String
+    bucket::Bucket
+    CacheServer(_...) = new(string(uuid1())[end-5:end])
+end
+
+
 struct PersistentStorage
     data::Array{Record}
     PersistentStorage(record_count::Integer) = begin
@@ -19,3 +33,5 @@ struct PersistentStorage
         new(data)
     end
 end
+
+make_servers(count::Integer) = map(CacheServer, 1:count)
