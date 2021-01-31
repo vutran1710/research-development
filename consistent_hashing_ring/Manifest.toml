@@ -121,6 +121,12 @@ git-tree-sha1 = "3cc57ad0a213808473eafef4845a74766242e05f"
 uuid = "b22a6f82-2f65-5046-a5b2-351ab43fb4e5"
 version = "4.3.1+4"
 
+[[Faker]]
+deps = ["Dates", "Random", "YAML"]
+git-tree-sha1 = "7a6f68f18164089141d8a39383c9a915857bbd31"
+uuid = "0efc519c-db33-5916-ab87-703215c3906f"
+version = "0.2.2"
+
 [[FixedPointNumbers]]
 deps = ["Statistics"]
 git-tree-sha1 = "335bfdceacc84c5cdf16aadc768aa5ddfc5383cc"
@@ -717,6 +723,12 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "79c31e7844f6ecf779705fbc12146eb190b7d845"
 uuid = "c5fb5394-a638-5e4d-96e5-b29de1b5cf10"
 version = "1.4.0+3"
+
+[[YAML]]
+deps = ["Base64", "Dates", "Printf"]
+git-tree-sha1 = "78c02bd295bbd0ca330f95e07ccdfcb69f6cbcd4"
+uuid = "ddb6d928-2868-570f-bddf-ab3f9cf99eb6"
+version = "0.4.6"
 
 [[Zlib_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
