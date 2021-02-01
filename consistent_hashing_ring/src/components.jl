@@ -34,4 +34,8 @@ struct PersistentStorage
     end
 end
 
-make_servers(count::Integer) = map(CacheServer, 1:count)
+
+struct RequestHandler
+    cache::Array{CacheServer}
+    storage::PersistentStorage
+end

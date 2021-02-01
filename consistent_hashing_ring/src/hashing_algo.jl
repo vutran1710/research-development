@@ -10,6 +10,7 @@ end
 
 function derive_labels(server_ring::Array, label_count::Integer)
     count = length(server_ring)
+    @assert mod(count+label_count, min(label_count, count)) !== 0
     deg_block = (2 / count)π
     step_deg = (2 / count / label_count)π
     distribute(s) = map(i -> [s[1] + i * count * step_deg, s[2]] , 1:label_count)
