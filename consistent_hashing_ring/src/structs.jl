@@ -24,4 +24,5 @@ end
 struct ConsistentHashingTable
     map::Dict{Float64, String}
     list::Array{Float64}
+    server_map::Dict{String, Array{Float64}}
 end

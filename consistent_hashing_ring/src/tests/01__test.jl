@@ -4,34 +4,34 @@ using JSON
 include("../structs.jl")
 include("../architech.jl")
 
+# Given inputs ========================================================
+server_count = 3
+label_multiplier = 10
+record_count = 5
 
-rec = create_records(5)
-println(rec)
-@test length(rec) == 5
+# Setup ===============================================================
+rec = create_records(record_count)
+@test length(rec) == record_count
+@test rec[1] isa Record
 
 store = PersistentStorage(rec)
-println(store)
-@test length(store.data) == 5
+@test length(store.data) == record_count
 @test store.data[1].id isa Integer
 @test store.data[1].name isa String
 
-caches = create_cache_servers(5)
-println(caches)
-@test length(caches) == 5
+caches = create_cache_servers(server_count)
+@test length(caches) == server_count
 @test caches[1].id isa String
 @test length(keys(caches[1].bucket.data)) == 0
 
-label_multiplier = 9
 ch_table = consistent_hashing(caches, label_multiplier)
-println(ch_table)
-@test length(keys(ch_table.map)) == label_multiplier * 5
-@test length(ch_table.list) == label_multiplier * 5
+@test length(keys(ch_table.map)) == label_multiplier * server_count
+@test length(ch_table.list) == label_multiplier * server_count
 
 add_to_cache(1, caches[1], store)
-println(caches[1].bucket.data[1])
 @test caches[1].bucket.data[1] != nothing
 
-println("======================= CACHE-DISTRIBUTION ====================")
+# Distributed Hashing should be fairly even ============================
 distribution_count = Dict()
 for sample_id in 1:1000
     hashed = hashing_oject(sample_id)

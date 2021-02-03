@@ -26,22 +26,27 @@ function consistent_hashing(servers::Array{CacheServer}, label_multiplier::Integ
     angle_step = (2 / count / label_multiplier)π
     angle_map = Dict()
     angle_list = []
+    server_map = Dict()
 
     for i in 1:count
         id = servers[i].id
         base_angle = (i - 1) * angle_block
 
+        angle_group = []
+
         for j in 1:label_multiplier
             real_angle = base_angle + j * count * angle_step
             angle = round(mod(real_angle, 2π), digits=3)
             angle_map[angle] = id
+            push!(angle_group, angle)
             push!(angle_list, angle)
         end
 
+        server_map[id] = angle_group
         sort!(angle_list)
     end
 
-    return ConsistentHashingTable(angle_map, angle_list)
+    return ConsistentHashingTable(angle_map, angle_list, server_map)
 end
 
 
@@ -55,7 +60,9 @@ end
 
 
 function hashing_oject(record_id::Integer)
-    pi_angle = record_id * π / 180
+    # NOTE: multiply by 15 so the degree will increase faster
+    # and thus more evenly distributed
+    pi_angle = record_id * 15 * π / 180
     return round(mod(pi_angle, 2π), digits=3)
 end
 

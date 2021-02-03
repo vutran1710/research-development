@@ -1,56 +1,57 @@
 module main
-include("components.jl")
-include("hashing_algo.jl")
+include("structs.jl")
+include("architech.jl")
 
 using JSON
-#using Plots
+using Plots
 using Colors
 
-#pyplot()
+pyplot()
 
 # ----------- config
-server_count = 5
-label_count = 8
+label_multiplier = 4
+cache_count = 3
 record_count = 100
 
 # ----------- setup
-storage = PersistentStorage(record_count)
-servers = map(CacheServer, 1:server_count)
-ring = place_servers_over_ring(servers)
-labels = derive_labels(ring, label_count)
-println(json(labels, 2))
-color_generator = Iterators.Stateful(distinguishable_colors(server_count))
-request_handler = RequestHandler(servers, storage)
-backend = request(request_handler)
+rec = create_records(record_count)
+store = PersistentStorage(rec)
+caches = create_cache_servers(cache_count)
+ch_table = consistent_hashing(caches, label_multiplier)
+color_generator = Iterators.Stateful(distinguishable_colors(cache_count))
+color_map = Dict(s.id => popfirst!(color_generator) for s ∈ caches)
 
-data = backend(20)
-println(data)
-# # ----------- plotting setup
-# default(legendfontsize=16, framestyle=:zerolines, tickfont=(12, :white))
-# plot(sin, cos, 0, 2π, aspect_ratio=1, show=true, label=false)
+# # ----------- plotting setups
+default(legendfontsize=16, framestyle=:zerolines, tickfont=(12, :white))
+plot(sin, cos, 0, 2π, aspect_ratio=1, show=true, label=false, reuse=true)
 
 # # ----------- plotting servers
-# for group in labels
-#     x_series, y_series = [], []
-#     label = group[1][2]
+for (server_id, angles) in ch_table.server_map
+    x_series, y_series = map(sin, angles), map(cos, angles)
+    color = color_map[server_id]
 
-#     for point in group
-#         angle = point[1]
-#         push!(x_series, sin(angle))
-#         push!(y_series, cos(angle))
-#     end
+    scatter!(
+        x_series,
+        y_series,
+        markersize=20,
+        label=server_id,
+        c=color,
+    )
+end
 
-#     scatter!(
-#         x_series,
-#         y_series,
-#         markersize=20,
-#         label=label,
-#         c=popfirst!(color_generator),
-#     )
+# NOTE: keeping the plotting-window open until user provide some input
 
-# end
+for sample_id in 1:10
+    hashed = hashing_oject(sample_id)
+    scatter!(
+        [sin(hashed)],
+        [cos(hashed)],
+        markersize=8,
+        label="loc-$(sample_id)",
+        c=:red,
+    )
+    sleep(0.1)
+end
 
-# # NOTE: keeping the plotting-window open until user provide some input
-# readline()
 
 end
