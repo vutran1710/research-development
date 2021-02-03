@@ -13,7 +13,7 @@ end
 function create_cache_servers(num::Integer)
     ids = [string(uuid1())[end-5:end] for _=1:num]
     id = () -> popfirst!(ids)
-    bucket = () -> Bucket([])
+    bucket = () -> Bucket(Dict())
     create_server = _ -> CacheServer(id(), bucket())
     map(create_server, 1:num)
 end
@@ -22,15 +22,13 @@ end
 function consistent_hashing(servers::Array{CacheServer}, label_multiplier::Integer)
     count = length(servers)
     angle_block = (2 / count)π
-    place = i -> (i - 1) * angle_block
-    base_positions = map(place, 1:count)
     angle_step = (2 / count / label_multiplier)π
     angle_map = Dict()
     angle_list = []
 
     for i in 1:count
         id = servers[i].id
-        base_angle = base_positions[i]
+        base_angle = (i - 1) * angle_block
 
         for j in 1:label_multiplier
             angle = round(base_angle + j * count * angle_step, digits=2)
@@ -39,8 +37,16 @@ function consistent_hashing(servers::Array{CacheServer}, label_multiplier::Integ
         end
 
         sort!(angle_list)
-
     end
 
     return ConsistentHashingTable(angle_map, angle_list)
+end
+
+
+function add_to_cache(record_id::Integer, cache::CacheServer, store::PersistentStorage)
+    idx = findfirst(x -> x.id == record_id, store.data)
+    if idx != nothing
+        record = store.data[idx]
+        push!(cache.bucket.data, record.id => record)
+    end
 end

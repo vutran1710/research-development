@@ -18,7 +18,7 @@ caches = create_cache_servers(5)
 println(caches)
 @test length(caches) == 5
 @test caches[1].id isa String
-@test length(caches[1].bucket.data) == 0
+@test length(keys(caches[1].bucket.data)) == 0
 
 label_multiplier = 7
 ch_table = consistent_hashing(caches, label_multiplier)
@@ -26,5 +26,8 @@ println(ch_table)
 @test length(keys(ch_table.map)) == label_multiplier * 5
 @test length(ch_table.list) == label_multiplier * 5
 
+add_to_cache(1, caches[1], store)
+println(caches[1].bucket.data[1])
+@test caches[1].bucket.data[1] != nothing
 
 end

@@ -3,8 +3,8 @@ struct Record
     name::String
 end
 
-mutable struct Bucket
-    data::Array{Record}
+struct Bucket
+    data::Dict{Integer, Record}
 end
 
 struct CacheServer
