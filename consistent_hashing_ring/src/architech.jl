@@ -50,3 +50,16 @@ function add_to_cache(record_id::Integer, cache::CacheServer, store::PersistentS
         push!(cache.bucket.data, record.id => record)
     end
 end
+
+
+function hashing_oject(record_id::Integer)
+    round(record_id * π / 180, digits=2)
+end
+
+function locate_cache(cluster::ConsistentHashingTable, hashed::Float64)
+    idx = findfirst(angle -> hashed >= angle, cluster.list)
+    cache_angle_idx = (idx != nothing && idx > 1) ? idx - 1 : 1
+    angle =  cluster.list[cache_angle_idx]
+    cache = cluster.map[angle]
+    return cache, angle
+end

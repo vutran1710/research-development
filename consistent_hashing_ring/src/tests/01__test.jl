@@ -30,4 +30,12 @@ add_to_cache(1, caches[1], store)
 println(caches[1].bucket.data[1])
 @test caches[1].bucket.data[1] != nothing
 
+println("===========================================")
+hashed = hashing_oject(99)
+println(hashed)
+cache, angle = locate_cache(ch_table, hashed)
+println(cache)
+println(angle)
+@test cache != nothing
+
 end
