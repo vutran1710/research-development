@@ -1,5 +1,6 @@
 module test1
 using Test
+using JSON
 include("../structs.jl")
 include("../architech.jl")
 
@@ -20,7 +21,7 @@ println(caches)
 @test caches[1].id isa String
 @test length(keys(caches[1].bucket.data)) == 0
 
-label_multiplier = 7
+label_multiplier = 9
 ch_table = consistent_hashing(caches, label_multiplier)
 println(ch_table)
 @test length(keys(ch_table.map)) == label_multiplier * 5
@@ -30,12 +31,17 @@ add_to_cache(1, caches[1], store)
 println(caches[1].bucket.data[1])
 @test caches[1].bucket.data[1] != nothing
 
-println("===========================================")
-hashed = hashing_oject(99)
-println(hashed)
-cache, angle = locate_cache(ch_table, hashed)
-println(cache)
-println(angle)
-@test cache != nothing
+println("======================= CACHE-DISTRIBUTION ====================")
+distribution_count = Dict()
+for sample_id in 1:1000
+    hashed = hashing_oject(sample_id)
+    cache_id, angle = locate_cache(ch_table, hashed)
+    count = get(distribution_count, cache_id, 0)
+    distribution_count[cache_id] = count + 1
+end
+
+println(json(distribution_count, 2))
+
+
 
 end

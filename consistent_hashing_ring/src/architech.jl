@@ -21,6 +21,7 @@ end
 
 function consistent_hashing(servers::Array{CacheServer}, label_multiplier::Integer)
     count = length(servers)
+    @assert mod(count + label_multiplier, min(label_multiplier, count)) !== 0
     angle_block = (2 / count)π
     angle_step = (2 / count / label_multiplier)π
     angle_map = Dict()
@@ -31,7 +32,8 @@ function consistent_hashing(servers::Array{CacheServer}, label_multiplier::Integ
         base_angle = (i - 1) * angle_block
 
         for j in 1:label_multiplier
-            angle = round(base_angle + j * count * angle_step, digits=2)
+            real_angle = base_angle + j * count * angle_step
+            angle = round(mod(real_angle, 2π), digits=3)
             angle_map[angle] = id
             push!(angle_list, angle)
         end
@@ -53,11 +55,12 @@ end
 
 
 function hashing_oject(record_id::Integer)
-    round(record_id * π / 180, digits=2)
+    pi_angle = record_id * π / 180
+    return round(mod(pi_angle, 2π), digits=3)
 end
 
 function locate_cache(cluster::ConsistentHashingTable, hashed::Float64)
-    idx = findfirst(angle -> hashed >= angle, cluster.list)
+    idx = findfirst(angle -> angle ≥ hashed, cluster.list)
     cache_angle_idx = (idx != nothing && idx > 1) ? idx - 1 : 1
     angle =  cluster.list[cache_angle_idx]
     cache = cluster.map[angle]
