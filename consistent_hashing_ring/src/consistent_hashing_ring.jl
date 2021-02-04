@@ -9,7 +9,7 @@ using Colors
 pyplot()
 
 # ------------ config
-label_multiplier = 4
+label_multiplier = 5
 cache_count = 3
 record_count = 100
 
@@ -40,23 +40,25 @@ for (server_id, angles) in ch_table.server_map
 end
 
 # NOTE: keeping the plotting-window open until user provide some input
-pin_object() = begin
-    for sample_id in 1:10
+pin_object(table::ConsistentHashingTable) = begin
+    for sample_id in 1:50
         hashed = hashing_oject(sample_id)
-        scatter!(
-            [sin(hashed)],
-            [cos(hashed)],
-            markersize=8,
-            c=:red,
+        _, angle = locate_cache(table, hashed)
+        plot!(
+            [sin(hashed), sin(angle)],
+            [cos(hashed), cos(angle)],
+            arrow=true,
+            label=false,
+            c=:black,
         )
-        sleep(1)
+        readline()
     end
 end
 
 while true
     command = readline()
     if command == "add"
-        pin_object()
+        pin_object(ch_table)
     end
 end
 

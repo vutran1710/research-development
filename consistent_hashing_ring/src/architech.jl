@@ -62,14 +62,18 @@ end
 function hashing_oject(record_id::Integer)
     # NOTE: multiply by 15 so the degree will increase faster
     # and thus more evenly distributed
-    pi_angle = record_id * 15 * π / 180
+    pi_angle = record_id * 5 * π / 180
     return round(mod(pi_angle, 2π), digits=3)
 end
 
 function locate_cache(cluster::ConsistentHashingTable, hashed::Float64)
     idx = findfirst(angle -> angle ≥ hashed, cluster.list)
-    cache_angle_idx = (idx != nothing && idx > 1) ? idx - 1 : 1
-    angle =  cluster.list[cache_angle_idx]
+
+    if idx == nothing
+        idx = 1
+    end
+
+    angle =  cluster.list[idx]
     cache = cluster.map[angle]
     return cache, angle
 end

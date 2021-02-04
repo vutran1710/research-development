@@ -6,7 +6,7 @@ include("../architech.jl")
 
 # Given inputs ========================================================
 server_count = 3
-label_multiplier = 10
+label_multiplier = 5
 record_count = 5
 
 # Setup ===============================================================
@@ -33,7 +33,7 @@ add_to_cache(1, caches[1], store)
 
 # Distributed Hashing should be fairly even ============================
 distribution_count = Dict()
-for sample_id in 1:1000
+for sample_id in 1:10000
     hashed = hashing_oject(sample_id)
     cache_id, angle = locate_cache(ch_table, hashed)
     count = get(distribution_count, cache_id, 0)
