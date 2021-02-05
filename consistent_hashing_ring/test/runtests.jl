@@ -1,7 +1,11 @@
 using Test
 using JSON
+using Logging
 include("../src/structs.jl")
 include("../src/architech.jl")
+
+logger = SimpleLogger()
+global_logger(logger)
 
 @testset "consistent-hashing system" begin
     # Given inputs ========================================================
@@ -53,5 +57,15 @@ include("../src/architech.jl")
     @test response isa ResponseMessage
     @test response.data != nothing
     @test response.message == SUCCESS
+
+    response = system.query(101)
+    @test response isa ResponseMessage
+    @test response.data == nothing
+    @test response.message == SYSTEM_ERROR
+
+    response = system.query(-1)
+    @test response isa ResponseMessage
+    @test response.data == nothing
+    @test response.message == NOT_FOUND
 
 end

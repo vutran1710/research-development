@@ -1,6 +1,8 @@
+using Logging
 using UUIDs: uuid1
 using Faker: first_name, last_name
 
+global_logger()
 
 function create_records(num::Integer)
     ids = Iterators.Stateful(1:1000)
@@ -78,7 +80,18 @@ function construct_system(
 )::TheSystem
     cache_cluster_map = Dict(svr.id => svr for svr ∈ caches)
 
-    function query(id)::ResponseMessage
+    try_except = handler -> (params...) -> begin
+        try handler(params...)
+        catch e
+            @error (e)
+            ResponseMessage(nothing, SYSTEM_ERROR)
+        end
+    end
+
+    function query(id::RecordID)
+        if id > 100
+            throw(DomainError(id, "ID too large... $(id) > 100"))
+        end
         hashed = hashing_oject(id)
         cache_id, _ = locate_cache(table, hashed)
         cache_svr = cache_cluster_map[cache_id]
@@ -92,5 +105,5 @@ function construct_system(
         return ResponseMessage(nothing, NOT_FOUND)
     end
 
-    return TheSystem(query)
+    return TheSystem(try_except(query))
 end

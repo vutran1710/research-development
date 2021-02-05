@@ -29,7 +29,7 @@ struct ConsistentHashingTable
 end
 
 struct ResponseMessage
-    data::Record
+    data::Union{Nothing, Record}
     message::Message
 end
 
