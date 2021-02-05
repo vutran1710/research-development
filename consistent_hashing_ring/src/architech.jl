@@ -1,10 +1,11 @@
 using UUIDs: uuid1
-using Faker
+using Faker: first_name, last_name
+
 
 function create_records(num::Integer)
     ids = Iterators.Stateful(1:1000)
     id = () -> popfirst!(ids)
-    name = () -> "$(Faker.first_name()) $(Faker.last_name())"
+    name = () -> "$(first_name()) $(last_name())"
     create_record = _ -> Record(id(), name())
     map(create_record, 1:num)
 end
@@ -92,5 +93,5 @@ function construct_system(
         return ResponseMessage(nothing, NOT_FOUND)
     end
 
-    TheSystem(query)
+    return TheSystem(query)
 end
