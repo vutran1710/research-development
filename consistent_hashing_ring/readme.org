@@ -11,15 +11,14 @@
    - Fire requests again, print changes/rehashing
 
 ** Setup
-#+begin_src shell
-$ cd consistent_hashing_ring
-$ julia --project=.
-$ ] add MySQL, DBInterface
-#+end_src
-
 Running
 #+begin_src shell
 $ julia --project=. src/consistent_hashing_ring.jl
+#+end_src
+
+Testing
+#+begin_src shell
+$ julia --project=. test/runtests.jl
 #+end_src
 
 ** Architecture

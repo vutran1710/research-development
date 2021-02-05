@@ -3,7 +3,7 @@ using JSON
 include("../src/structs.jl")
 include("../src/architech.jl")
 
-@testset "trigonometric identities" begin
+@testset "consistent-hashing system" begin
     # Given inputs ========================================================
     server_count = 4
     label_multiplier = 7
