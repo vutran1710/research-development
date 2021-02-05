@@ -7,19 +7,15 @@ RecordID = Integer
 @enum Message SUCCESS=1 NOT_FOUND SYSTEM_ERROR
 
 
-# Structs representing System components ================
+# Structs representing System parts  ====================
 struct Record
     id::RecordID
     name::String
 end
 
-struct Bucket
-    data::Dict{RecordID, Record}
-end
-
 struct CacheServer
     id::ServerID
-    bucket::Bucket
+    bucket::Dict{RecordID, Record}
 end
 
 struct PersistentStorage
@@ -37,7 +33,6 @@ struct ResponseMessage
     message::Message
 end
 
-# Combining everything to The-System =======================
 struct TheSystem
     query::Any
 end

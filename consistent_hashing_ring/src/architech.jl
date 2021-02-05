@@ -14,8 +14,7 @@ end
 function create_cache_servers(num::Integer)
     ids = [string(uuid1())[end-5:end] for _=1:num]
     id = () -> "cache-$(popfirst!(ids))"
-    bucket = () -> Bucket(Dict())
-    create_server = _ -> CacheServer(id(), bucket())
+    create_server = _ -> CacheServer(id(), Dict())
     map(create_server, 1:num)
 end
 
@@ -83,10 +82,10 @@ function construct_system(
         hashed = hashing_oject(id)
         cache_id, _ = locate_cache(table, hashed)
         cache_svr = cache_cluster_map[cache_id]
-        bucket_data = cache_svr.bucket.data
+        bucket = cache_svr.bucket
 
-        if haskey(bucket_data, id)
-            record = bucket_data[id]
+        if haskey(bucket, id)
+            record = bucket[id]
             return ResponseMessage(record, SUCCESS)
         end
 

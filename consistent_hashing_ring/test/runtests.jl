@@ -23,7 +23,7 @@ include("../src/architech.jl")
     caches = create_cache_servers(server_count)
     @test length(caches) == server_count
     @test caches[1].id isa String
-    @test length(keys(caches[1].bucket.data)) == 0
+    @test length(keys(caches[1].bucket)) == 0
 
     table = consistent_hashing(caches, label_multiplier)
     @test length(keys(table.map)) == label_multiplier * server_count
@@ -41,7 +41,7 @@ include("../src/architech.jl")
         # NOTE: distribute data to cache-servers
         cache_idx = findfirst(x -> x.id == cache_id, caches)
         cache_svr = caches[cache_idx]
-        push!(cache_svr.bucket.data, record.id => record)
+        push!(cache_svr.bucket, record.id => record)
     end
 
     println(json(distribution_count, 2))
