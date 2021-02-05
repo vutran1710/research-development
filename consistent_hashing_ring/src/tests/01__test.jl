@@ -5,8 +5,8 @@ include("../structs.jl")
 include("../architech.jl")
 
 # Given inputs ========================================================
-server_count = 3
-label_multiplier = 5
+server_count = 4
+label_multiplier = 7
 record_count = 5
 
 # Setup ===============================================================
