@@ -16,13 +16,15 @@ struct PersistentStorage
     data::Array{Record}
 end
 
-struct RequestHandler
-    cache::Dict{String, CacheServer}
-    storage::PersistentStorage
-end
-
 struct ConsistentHashingTable
     map::Dict{Float64, String}
     list::Array{Float64}
     server_map::Dict{String, Array{Float64}}
+end
+
+struct TheSystem
+    cache_cluster::Dict{String, CacheServer}
+    storage::PersistentStorage
+    hash_table::ConsistentHashingTable
+    query::Any
 end

@@ -66,14 +66,31 @@ function hashing_oject(record_id::Integer)
     return round(mod(pi_angle, 2π), digits=3)
 end
 
-function locate_cache(cluster::ConsistentHashingTable, hashed::Float64)
-    idx = findfirst(angle -> angle ≥ hashed, cluster.list)
+
+function locate_cache(table::ConsistentHashingTable, hashed::Float64)
+    idx = findfirst(angle -> angle ≥ hashed, table.list)
 
     if idx == nothing
         idx = 1
     end
 
-    angle =  cluster.list[idx]
-    cache = cluster.map[angle]
+    angle = table.list[idx]
+    cache = table.map[angle]
     return cache, angle
+end
+
+
+function construct_system(storage::PersistentStorage, caches::Array{CacheServer}, table::ConsistentHashingTable)
+    cluster = Dict(svr.id => svr for svr ∈ caches)
+    NOT_FOUND_MSG = "<<Not Found>>"
+
+    function query(id)
+        println("=>> looking up id = ", id)
+        hashed = hashing_oject(id)
+        cache_id, _ = locate_cache(table, hashed)
+        cache_svr = cluster[cache_id]
+        return get(cache_svr.bucket.data, id, NOT_FOUND_MSG)
+    end
+
+    TheSystem(cluster, storage, table, query)
 end

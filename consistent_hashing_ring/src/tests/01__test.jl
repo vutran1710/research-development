@@ -24,9 +24,9 @@ caches = create_cache_servers(server_count)
 @test caches[1].id isa String
 @test length(keys(caches[1].bucket.data)) == 0
 
-ch_table = consistent_hashing(caches, label_multiplier)
-@test length(keys(ch_table.map)) == label_multiplier * server_count
-@test length(ch_table.list) == label_multiplier * server_count
+table = consistent_hashing(caches, label_multiplier)
+@test length(keys(table.map)) == label_multiplier * server_count
+@test length(table.list) == label_multiplier * server_count
 
 add_to_cache(1, caches[1], store)
 @test caches[1].bucket.data[1] != nothing
@@ -35,13 +35,19 @@ add_to_cache(1, caches[1], store)
 distribution_count = Dict()
 for sample_id in 1:10000
     hashed = hashing_oject(sample_id)
-    cache_id, angle = locate_cache(ch_table, hashed)
+    cache_id, angle = locate_cache(table, hashed)
     count = get(distribution_count, cache_id, 0)
     distribution_count[cache_id] = count + 1
 end
 
 println(json(distribution_count, 2))
 
+
+# Construct
+system = construct_system(store, caches, table)
+@test length(keys(system.cache_cluster)) > 0
+@test system.query(1) == 0
+@test system.query(2) == 1
 
 
 end
