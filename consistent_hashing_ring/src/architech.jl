@@ -33,7 +33,6 @@ function consistent_hashing(servers::Array{CacheServer}, label_multiplier::Integ
     for i in 1:count
         id = servers[i].id
         base_angle = (i - 1) * angle_block
-
         angle_group = []
 
         for j in 1:label_multiplier
@@ -94,8 +93,7 @@ function construct_system(
         end
         hashed = hashing_oject(id)
         cache_id, _ = locate_cache(table, hashed)
-        cache_svr = cache_cluster_map[cache_id]
-        bucket = cache_svr.bucket
+        bucket = cache_cluster_map[cache_id].bucket
 
         if haskey(bucket, id)
             record = bucket[id]
