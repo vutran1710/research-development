@@ -7,17 +7,17 @@ include("../architech.jl")
 # Given inputs ========================================================
 server_count = 4
 label_multiplier = 7
-record_count = 5
+record_count = 1000
 
 # Setup ===============================================================
 rec = create_records(record_count)
 @test length(rec) == record_count
 @test rec[1] isa Record
 
-store = PersistentStorage(rec)
-@test length(store.data) == record_count
-@test store.data[1].id isa Integer
-@test store.data[1].name isa String
+storage = PersistentStorage(rec)
+@test length(storage.data) == record_count
+@test storage.data[1].id isa Integer
+@test storage.data[1].name isa String
 
 caches = create_cache_servers(server_count)
 @test length(caches) == server_count
@@ -28,26 +28,28 @@ table = consistent_hashing(caches, label_multiplier)
 @test length(keys(table.map)) == label_multiplier * server_count
 @test length(table.list) == label_multiplier * server_count
 
-add_to_cache(1, caches[1], store)
-@test caches[1].bucket.data[1] != nothing
-
-# Distributed Hashing should be fairly even ============================
+# NOTE: Distributed Hashing should be fairly even =====================
 distribution_count = Dict()
-for sample_id in 1:10000
-    hashed = hashing_oject(sample_id)
+for record in rec
+    hashed = hashing_oject(record.id)
     cache_id, angle = locate_cache(table, hashed)
     count = get(distribution_count, cache_id, 0)
     distribution_count[cache_id] = count + 1
+    # NOTE: distribute data to cache-servers
+    cache_idx = findfirst(x -> x.id == cache_id, caches)
+    cache_svr = caches[cache_idx]
+    push!(cache_svr.bucket.data, record.id => record)
 end
 
 println(json(distribution_count, 2))
 
 
-# Construct
-system = construct_system(store, caches, table)
-@test length(keys(system.cache_cluster)) > 0
-@test system.query(1) == 0
-@test system.query(2) == 1
+# NOTE: Construct and query
+system = construct_system(storage, caches, table)
+response = system.query(100)
+@test response isa ResponseMessage
+@test response.data != nothing
+@test response.message == SUCCESS
 
 
 end

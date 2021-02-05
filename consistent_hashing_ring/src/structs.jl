@@ -1,3 +1,6 @@
+@enum Message SUCCESS=1 NOT_FOUND SYSTEM_ERROR
+
+
 struct Record
     id::Integer
     name::String
@@ -23,8 +26,10 @@ struct ConsistentHashingTable
 end
 
 struct TheSystem
-    cache_cluster::Dict{String, CacheServer}
-    storage::PersistentStorage
-    hash_table::ConsistentHashingTable
     query::Any
+end
+
+struct ResponseMessage
+    data::Record
+    message::Message
 end
