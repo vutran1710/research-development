@@ -1,10 +1,13 @@
 module main
 include("structs.jl")
 include("architech.jl")
-
+using Logging
 using JSON
 using Plots
 using Colors
+
+logger = SimpleLogger()
+global_logger(logger)
 
 pyplot()
 
@@ -23,7 +26,7 @@ color_map = Dict(s.id => popfirst!(color_generator) for s ∈ caches)
 
 # ------------ plotting setups
 default(legendfontsize=16, framestyle=:zerolines, tickfont=(12, :white))
-plot(sin, cos, 0, 2π, aspect_ratio=1, show=true, label=false, reuse=true)
+plot(sin, cos, 0, 2π, aspect_ratio=1, show=true, label=false, size = (700, 700))
 
 # ------------ plotting servers
 for (server_id, angles) in ch_table.server_map
