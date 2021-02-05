@@ -24,8 +24,8 @@ end
 function consistent_hashing(servers::Array{CacheServer}, label_multiplier::Integer)
     count = length(servers)
     @assert mod(count + label_multiplier, min(label_multiplier, count)) !== 0
-    angle_block = (2 / count)π
-    angle_step = (2 / count / label_multiplier)π
+    angle_block = 2π / count
+    angle_step = 2π / (count * label_multiplier)
     angle_map = Dict()
     angle_list = []
     server_map = Dict()
