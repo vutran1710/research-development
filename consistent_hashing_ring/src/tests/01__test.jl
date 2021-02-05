@@ -9,6 +9,7 @@ server_count = 4
 label_multiplier = 7
 record_count = 1000
 
+
 # Setup ===============================================================
 rec = create_records(record_count)
 @test length(rec) == record_count
@@ -28,8 +29,10 @@ table = consistent_hashing(caches, label_multiplier)
 @test length(keys(table.map)) == label_multiplier * server_count
 @test length(table.list) == label_multiplier * server_count
 
+
 # NOTE: Distributed Hashing should be fairly even =====================
 distribution_count = Dict()
+
 for record in rec
     hashed = hashing_oject(record.id)
     cache_id, angle = locate_cache(table, hashed)

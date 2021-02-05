@@ -12,7 +12,7 @@ end
 
 function create_cache_servers(num::Integer)
     ids = [string(uuid1())[end-5:end] for _=1:num]
-    id = () -> popfirst!(ids)
+    id = () -> "cache-$(popfirst!(ids))"
     bucket = () -> Bucket(Dict())
     create_server = _ -> CacheServer(id(), bucket())
     map(create_server, 1:num)
@@ -50,15 +50,15 @@ function consistent_hashing(servers::Array{CacheServer}, label_multiplier::Integ
 end
 
 
-function hashing_oject(record_id::Integer)
-    # NOTE: multiply by 15 so the degree will increase faster
+function hashing_oject(record_id::RecordID)::Angle
+    # NOTE: multiply by 5 so the degree will increase faster
     # and thus more evenly distributed
     pi_angle = record_id * 5 * π / 180
     return round(mod(pi_angle, 2π), digits=3)
 end
 
 
-function locate_cache(table::ConsistentHashingTable, hashed::Float64)
+function locate_cache(table::ConsistentHashingTable, hashed::Angle)
     idx = findfirst(angle -> angle ≥ hashed, table.list)
 
     if idx == nothing
@@ -71,22 +71,21 @@ function locate_cache(table::ConsistentHashingTable, hashed::Float64)
 end
 
 
-function construct_system(storage::PersistentStorage, caches::Array{CacheServer}, table::ConsistentHashingTable)::TheSystem
-    cluster = Dict(svr.id => svr for svr ∈ caches)
-    NOT_FOUND_MSG = "<<Not Found>>"
+function construct_system(
+    storage::PersistentStorage,
+    caches::Array{CacheServer},
+    table::ConsistentHashingTable,
+)::TheSystem
+    cache_cluster_map = Dict(svr.id => svr for svr ∈ caches)
 
     function query(id)::ResponseMessage
-        println("=>> looking up id = ", id)
         hashed = hashing_oject(id)
         cache_id, _ = locate_cache(table, hashed)
-        println("Cache-id > ", cache_id)
-        cache_svr = cluster[cache_id]
+        cache_svr = cache_cluster_map[cache_id]
         bucket_data = cache_svr.bucket.data
-        println(length(keys(bucket_data)))
+
         if haskey(bucket_data, id)
-            println("Has record")
             record = bucket_data[id]
-            println(record)
             return ResponseMessage(record, SUCCESS)
         end
 

@@ -1,17 +1,24 @@
+# Type Aliases ==========================================
+Angle = Float64
+ServerID = String
+RecordID = Integer
+
+# Constants & Enum ======================================
 @enum Message SUCCESS=1 NOT_FOUND SYSTEM_ERROR
 
 
+# Structs representing System components ================
 struct Record
-    id::Integer
+    id::RecordID
     name::String
 end
 
 struct Bucket
-    data::Dict{Integer, Record}
+    data::Dict{RecordID, Record}
 end
 
 struct CacheServer
-    id::String
+    id::ServerID
     bucket::Bucket
 end
 
@@ -20,16 +27,17 @@ struct PersistentStorage
 end
 
 struct ConsistentHashingTable
-    map::Dict{Float64, String}
-    list::Array{Float64}
-    server_map::Dict{String, Array{Float64}}
-end
-
-struct TheSystem
-    query::Any
+    map::Dict{Angle, ServerID}
+    list::Array{Angle}
+    server_map::Dict{ServerID, Array{Angle}}
 end
 
 struct ResponseMessage
     data::Record
     message::Message
+end
+
+# Combining everything to The-System =======================
+struct TheSystem
+    query::Any
 end
