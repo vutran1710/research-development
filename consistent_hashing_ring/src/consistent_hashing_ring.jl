@@ -1,6 +1,7 @@
 module main
 include("structs.jl")
 include("architech.jl")
+include("plotf.jl")
 using Logging
 using JSON
 using Plots
@@ -41,6 +42,7 @@ for (server_id, angles) in ch_table.server_map
         c=color,
     )
 end
+
 
 # NOTE: keeping the plotting-window open until user provide some input
 pin_object(table::ConsistentHashingTable) = begin

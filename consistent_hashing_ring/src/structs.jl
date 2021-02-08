@@ -36,3 +36,8 @@ end
 struct TheSystem
     query::Any
 end
+
+struct Point
+    x::Float64
+    y::Float64
+end

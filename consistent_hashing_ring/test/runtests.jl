@@ -3,6 +3,7 @@ using JSON
 using Logging
 include("../src/structs.jl")
 include("../src/architech.jl")
+include("../src/plotf.jl")
 
 logger = SimpleLogger()
 global_logger(logger)
@@ -68,4 +69,21 @@ global_logger(logger)
     @test response.data == nothing
     @test response.message == NOT_FOUND
 
+    # Testing plot functions
+    a = Point(0, 1)
+    b = Point(1, 0)
+    c = find_center(a, b)
+    @test c.x == 0.5
+    @test c.y == 0.5
+
+    a = Point(0, 3)
+    b = Point(4, 0)
+    d = distance(a, b)
+    @test d == 5
+    c = find_center(a, b)
+    @info c
+
+    xes, yes = make_arc(a, b)
+    @info [_ for _=xes]
+    @info [_ for _=yes]
 end
