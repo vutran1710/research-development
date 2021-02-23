@@ -6,8 +6,8 @@ end
 
 
 function find_center(p1::Point, p2::Point)::Point
-    x = (p1.x + p2.x) * 0.5
-    y = (p1.y + p2.y) * 0.5
+    x = (p1.x + p2.x) / 2
+    y = (p1.y + p2.y) / 2
     Point(x, y)
 end
 

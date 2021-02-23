@@ -1,25 +1,30 @@
 ** Prepare
    - Input required:
-     1. number of cache-server
+     1. number of cache-servers
    - Work:
      1. Generate dummy data
      2. Setting caching-server-ring map
+     3. Assign labels to cache servers
 
 ** Scenario
-   - Fire requests
+   - Interactively fire request:
+     - Return data and its storing cache
+     - Show where data is located
    - Randomly fail *n* servers
+     - Remove related nodes on the ring
    - Fire requests again, print changes/rehashing
 
 ** Setup
 Running
 #+begin_src shell
-$ julia --project=. src/consistent_hashing_ring.jl
+$ julia --project=. src/main.jl
 #+end_src
 
 Testing
 #+begin_src shell
 $ julia --project=. test/runtests.jl
 #+end_src
+
 
 ** Architecture
 

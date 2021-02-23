@@ -58,10 +58,11 @@ pin_object(table::ConsistentHashingTable) = begin
         plot!(
             [sin(hashed), sin(angle)],
             [cos(hashed), cos(angle)],
-            arrow=true,
+            arrow=1.5,
             label=false,
             c=:red,
             linewidth=2,
+            linealpha=0.3,
         )
         sleep(0.1)
     end
