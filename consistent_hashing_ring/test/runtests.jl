@@ -81,9 +81,14 @@ global_logger(logger)
     d = distance(a, b)
     @test d == 5
     c = find_center(a, b)
-    @info c
+    @info "Circle-Center = $(c)"
 
     xes, yes = make_arc(a, b)
-    @info [_ for _=xes]
-    @info [_ for _=yes]
+    @info "X-series = $([_ for _=xes])"
+    @info "Y-series = $([_ for _=yes])"
+
+    @test xes[1] == a.x
+    @test yes[1] == a.y
+    @test last(xes) == b.x
+    @test last(yes) == b.y
 end

@@ -46,17 +46,24 @@ end
 
 # NOTE: keeping the plotting-window open until user provide some input
 pin_object(table::ConsistentHashingTable) = begin
-    for sample_id in 1:50
-        hashed = hashing_oject(sample_id)
+    for _ in 1:10
+        hashed = hashing_oject(rand(1:1000))
         _, angle = locate_cache(table, hashed)
+
+        # NOTE: animation if possible, otherwise, fuck it!
+        # @gif for i ∈ hashed:(abs(angle-hashed)/10):angle
+        #     plot!([sin(i)], [cos(i)], c=:black, arrow=true, label=false, linewidth=3)
+        # end every 2
+
         plot!(
             [sin(hashed), sin(angle)],
             [cos(hashed), cos(angle)],
             arrow=true,
             label=false,
-            c=:black,
+            c=:red,
+            linewidth=2,
         )
-        readline()
+        sleep(0.1)
     end
 end
 
