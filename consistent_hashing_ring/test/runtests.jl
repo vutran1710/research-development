@@ -4,6 +4,7 @@ using Logging
 include("../src/structs.jl")
 include("../src/architech.jl")
 include("../src/plotf.jl")
+include("../src/cli.jl")
 
 logger = SimpleLogger()
 global_logger(logger)
@@ -89,6 +90,23 @@ global_logger(logger)
 
     @test xes[1] == a.x
     @test yes[1] == a.y
-    @test last(xes) == b.x
-    @test last(yes) == b.y
+end
+
+
+
+@testset "CLI command" begin
+    input_cmnd = "/add"
+    @test parse_command(input_cmnd) == ("add", nothing)
+
+    input_cmnd = "/a"
+    @test parse_command(input_cmnd) == ("a", nothing)
+
+    input_cmnd = "a"
+    @test parse_command(input_cmnd) == (nothing, nothing)
+
+    input_cmnd = ""
+    @test parse_command(input_cmnd) == (nothing, nothing)
+
+    input_cmnd = "/add 1"
+    @test parse_command(input_cmnd) == ("add", ["1"])
 end

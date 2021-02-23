@@ -2,10 +2,13 @@ module main
 include("structs.jl")
 include("architech.jl")
 include("plotf.jl")
+include("cli.jl")
 using Logging
 using JSON
 using Plots
 using Colors
+using Transducers
+
 
 logger = SimpleLogger()
 global_logger(logger)
@@ -68,12 +71,15 @@ pin_object(table::ConsistentHashingTable) = begin
     end
 end
 
-while true
-    command = readline()
-    if command == "add"
-        pin_object(ch_table)
-    end
-end
+
+add_points = () -> pin_object(ch_table)
+get_data = () -> 1
+
+compose(
+    run_forever,
+    handle_user_input,
+    CLIMaster,
+)(add_points, get_data)
 
 
 end
