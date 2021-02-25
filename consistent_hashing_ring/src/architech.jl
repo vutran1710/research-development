@@ -125,7 +125,7 @@ function construct_system(
         stop = start + record_number
         @info "start=$(start), stop=$(stop)"
         records = create_records(start=start, stop=stop)
-        storage.data = vcat(storage.data, records)
+        foreach(r -> push!(storage.data, r), records)
     end
 
     return TheSystem(

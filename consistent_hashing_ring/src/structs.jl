@@ -19,7 +19,7 @@ struct CacheServer
 end
 
 
-mutable struct PersistentStorage
+struct PersistentStorage
     data::Array{Record}
 end
 
