@@ -6,29 +6,17 @@ Type in command using one of the following:
 
 /get {record_id}
     # get a specific record using its id
+
+/bucket {cache_id}
+    # listing all records in a specific cache's bucket
 ======================================================
 """
 
 
-parse_command(str) = begin
-    splitted = split(str, " ")
-    len = length(splitted)
-
-    if len == 0
-        return nothing, nothing
-    end
-
-    cmd_str = splitted[1]
-    invalid_cmd_str = !occursin("/", cmd_str) || length(cmd_str) < 2
-
-    if invalid_cmd_str
-        return nothing, nothing
-    else
-        cmd_str = cmd_str[2:length(cmd_str)]
-    end
-
-    args = len > 1 ? splitted[2:len] : nothing
-    return cmd_str, args
+struct CLIMaster
+    add::Any
+    get::Any
+    bucket::Any
 end
 
 
@@ -52,24 +40,35 @@ end
 
 
 handle_user_input = cli -> () ->  begin
-    cmd_str, args = parse_command(readline())
+    print("command_input /")
+    str = readline()
+    splitted = split(str, " ")
+    len = length(splitted)
 
-    if cmd_str == nothing
+    if len == 0
+        return nothing, nothing
+    end
+
+    cmd = Symbol(splitted[1])
+
+    if !hasproperty(cli, cmd)
         @error "Invalid Command!"
         return nothing
     end
 
+    args = len > 1 ? splitted[2:end] : []
+
     try
-        caller = getfield(cli, Symbol(cmd_str))
-        @info caller
+        println("~~~~~~~~~~~~~~~~~~~~~~ BEGIN")
+        caller = getfield(cli, cmd)
+        @info caller(args...)
+        println("~~~~~~~~~~~~~~~~~~~~~~ END")
     catch e
-        @error "ControllerFunction does not exist"
+        @error "HandlerError > $(e)"
+    end
+
+    for _ in 1:3
+        # NOTE: separator between commands
         println("")
     end
-end
-
-
-struct CLIMaster
-    add::Any
-    get::Any
 end

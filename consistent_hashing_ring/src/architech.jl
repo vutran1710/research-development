@@ -87,12 +87,24 @@ function construct_system(
         end
     end
 
+    function cache_inspect(cache_id::ServerID)
+        @info "Showing cache-server=$(cache_id)"
+        if haskey(cache_cluster_map, cache_id)
+            return cache_cluster_map[cache_id].bucket
+        end
+        @warn "Cache-id does not exist"
+    end
+
     function query(id::RecordID)
+        @info "Querying record....: $(id)"
+
         if id > 100
             throw(DomainError(id, "ID too large... $(id) > 100"))
         end
+
         hashed = hashing_oject(id)
         cache_id, _ = locate_cache(table, hashed)
+        @info "Cache to serve: $(cache_id)"
         bucket = cache_cluster_map[cache_id].bucket
 
         if haskey(bucket, id)
@@ -100,8 +112,13 @@ function construct_system(
             return ResponseMessage(record, SUCCESS)
         end
 
+        @warn "Not cached yet"
+        # NOTE: pull from cold-storage
         return ResponseMessage(nothing, NOT_FOUND)
     end
 
-    return TheSystem(try_except(query))
+    return TheSystem(
+        try_except(query),
+        try_except(cache_inspect),
+    )
 end

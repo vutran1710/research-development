@@ -35,6 +35,7 @@ end
 
 struct TheSystem
     query::Any
+    cache_inspect::Any
 end
 
 struct Point

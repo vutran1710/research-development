@@ -22,11 +22,12 @@ record_count = 100
 
 # ------------ setup
 rec = create_records(record_count)
-store = PersistentStorage(rec)
+storage = PersistentStorage(rec)
 caches = create_cache_servers(cache_count)
 ch_table = consistent_hashing(caches, label_multiplier)
 color_generator = Iterators.Stateful(distinguishable_colors(cache_count))
 color_map = Dict(s.id => popfirst!(color_generator) for s ∈ caches)
+the_system = construct_system(storage, caches, ch_table)
 
 # ------------ plotting setups
 default(legendfontsize=16, framestyle=:zerolines, tickfont=(12, :white))
@@ -72,14 +73,23 @@ pin_object(table::ConsistentHashingTable) = begin
 end
 
 
-add_points = () -> pin_object(ch_table)
-get_data = () -> 1
+add_points = (_...) -> pin_object(ch_table)
+
+inspect_cache_bucket = params -> begin
+    cache_id = String(params)
+    the_system.cache_inspect(cache_id)
+end
+
+get_data = params -> begin
+    record_id = parse(Int64, params[1])
+    the_system.query(record_id)
+end
 
 compose(
     run_forever,
     handle_user_input,
     CLIMaster,
-)(add_points, get_data)
+)(add_points, get_data, inspect_cache_bucket)
 
 
 end

@@ -70,7 +70,13 @@ global_logger(logger)
     @test response.data == nothing
     @test response.message == NOT_FOUND
 
-    # Testing plot functions
+    bucket = system.cache_inspect(caches[1].id)
+    @test length(bucket) > 0
+end
+
+
+
+@testset "Plot utils" begin
     a = Point(0, 1)
     b = Point(1, 0)
     c = find_center(a, b)
