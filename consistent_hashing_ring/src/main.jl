@@ -15,33 +15,9 @@ global_logger(logger)
 
 pyplot()
 
-
-function construct(server_number::Integer, label_multiplier::Integer)
-    storage = PersistentStorage([])
-    caches = create_cache_servers(cache_count)
-    hash_table = consistent_hashing(caches, label_multiplier)
-    the_system = construct_system(storage, caches, hash_table)
-    return the_system
-end
-
-function add_records(storage::PersistentStorage)(record_number::Integer)
-    records = create_records(record_number)
-    push!(storage.data, records)
-end
-
-# ------------ config
-label_multiplier = 5
-cache_count = 3
-record_count = 100
-
 # ------------ setup
-rec = create_records(record_count)
-storage = PersistentStorage(rec)
-caches = create_cache_servers(cache_count)
-hash_table = consistent_hashing(caches, label_multiplier)
 color_generator = Iterators.Stateful(distinguishable_colors(cache_count))
 color_map = Dict(s.id => popfirst!(color_generator) for s ∈ caches)
-the_system = construct_system(storage, caches, hash_table)
 
 # ------------ plotting setups
 default(legendfontsize=16, framestyle=:zerolines, tickfont=(12, :white))
