@@ -88,11 +88,12 @@ function construct_system(
     end
 
     function cache_inspect(cache_id::ServerID)
-        @info "Showing cache-server=$(cache_id)"
+        @info "Inspect cache-server=$(cache_id)"
         if haskey(cache_cluster_map, cache_id)
-            return cache_cluster_map[cache_id].bucket
+            bucket = cache_cluster_map[cache_id].bucket
+            return ResponseMessage(bucket, SUCCESS)
         end
-        @warn "Cache-id does not exist"
+        return ResponseMessage(nothing, NOT_FOUND)
     end
 
     function query(id::RecordID)

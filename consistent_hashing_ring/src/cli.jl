@@ -9,6 +9,9 @@ Type in command using one of the following:
 
 /bucket {cache_id}
     # listing all records in a specific cache's bucket
+
+/help
+    # Show this dialog
 ======================================================
 """
 
@@ -51,6 +54,10 @@ handle_user_input = cli -> () ->  begin
 
     cmd = Symbol(splitted[1])
 
+    if cmd == :help
+        return println(welcome)
+    end
+
     if !hasproperty(cli, cmd)
         @error "Invalid Command!"
         return nothing
@@ -61,7 +68,7 @@ handle_user_input = cli -> () ->  begin
     try
         println("~~~~~~~~~~~~~~~~~~~~~~ BEGIN")
         caller = getfield(cli, cmd)
-        @info caller(args...)
+        println(caller(args...))
         println("~~~~~~~~~~~~~~~~~~~~~~ END")
     catch e
         @error "HandlerError > $(e)"
