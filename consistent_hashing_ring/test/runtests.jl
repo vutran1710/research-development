@@ -54,31 +54,38 @@ global_logger(logger)
     println(json(distribution_count, 2))
 
 
-    # NOTE: Construct and query
-    system = construct_system(storage, caches, table)
-    response = system.api__query(100)
+    # NOTE: Construct The System
+    system = construct(100, 4, 7)
+    @test length(system.storage.data) == 100
+
+    response = system.api__get_record(100)
     @test response isa ResponseMessage
     @test response.data != nothing
     @test response.message == SUCCESS
 
-    response = system.api__query(101)
+    response = system.api__get_record(101)
     @test response isa ResponseMessage
     @test response.data == nothing
     @test response.message == SYSTEM_ERROR
 
-    response = system.api__query(-1)
+    response = system.api__get_record(-1)
     @test response isa ResponseMessage
     @test response.data == nothing
     @test response.message == NOT_FOUND
 
-    response = system.api__cache_inspect(caches[1].id)
+    response = system.inspect__cache_ids()
+    @test response.message == SUCCESS
+    cache_ids = response.data
+    @test length(cache_ids) == 4
+
+    cache_id = cache_ids[1]
+    response = system.inspect__cache_data(cache_id)
     @test response.message == SUCCESS
     bucket = response.data
-    @test length(bucket) > 0
+    @test length(bucket) == 0
 
-    @test length(system.storage.data) == 1000
-    system.api__add_records(130)
-    @test length(system.storage.data) == 1130
+    system.api__add_records(13)
+    @test length(system.storage.data) == 113
 end
 
 

@@ -17,7 +17,6 @@ Type in command using one of the following:
 
 
 struct CLIMaster
-    construct::Any
     add::Any
     get::Any
     bucket::Any
@@ -79,4 +78,8 @@ handle_user_input = cli -> () ->  begin
         # NOTE: separator between commands
         println("")
     end
+end
+
+function get_function_signature(x)
+    methods(x).ms[1].sig
 end

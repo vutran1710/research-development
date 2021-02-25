@@ -74,31 +74,24 @@ function locate_cache(table::ConsistentHashingTable, hashed::Angle)
 end
 
 
-function construct_system(
-    storage::PersistentStorage,
-    caches::Array{CacheServer},
-    table::ConsistentHashingTable,
-)::TheSystem
+function construct(record_count::Integer, server_count::Integer, label_replica_count::Integer)::TheSystem
+    records = create_records(start=1, stop=record_count+1)
+    storage = PersistentStorage(records)
+    caches = create_cache_servers(server_count)
+    table = consistent_hashing(caches, label_replica_count)
     cache_cluster_map = Dict(svr.id => svr for svr ∈ caches)
 
     try_except = handler -> (params...) -> begin
-        try handler(params...)
+        try
+            result, status = handler(params...)
+            ResponseMessage(result, status)
         catch e
             @error (e)
             ResponseMessage(nothing, SYSTEM_ERROR)
         end
     end
 
-    function cache_inspect(cache_id::ServerID)
-        @info "Inspect cache-server=$(cache_id)"
-        if haskey(cache_cluster_map, cache_id)
-            bucket = cache_cluster_map[cache_id].bucket
-            return ResponseMessage(bucket, SUCCESS)
-        end
-        return ResponseMessage(nothing, NOT_FOUND)
-    end
-
-    function query(id::RecordID)
+    function get_record(id::RecordID)
         @info "Querying record....: $(id)"
 
         if id > 100
@@ -107,31 +100,46 @@ function construct_system(
 
         hashed = hashing_oject(id)
         cache_id, _ = locate_cache(table, hashed)
-        @info "Cache to serve: $(cache_id)"
         bucket = cache_cluster_map[cache_id].bucket
 
         if haskey(bucket, id)
             record = bucket[id]
-            return ResponseMessage(record, SUCCESS)
+            return record, SUCCESS
         end
 
         @warn "Not cached yet"
-        # NOTE: pull from cold-storage
-        return ResponseMessage(nothing, NOT_FOUND)
+        # NOTE: pull from cold-storage, then save to cache
+        record = findfirst(r -> r.id == id, storage.data)
+        record, record != nothing ? SUCCESS : NOT_FOUND
     end
 
     function add_records(record_number::Integer)
         start = length(storage.data) + 1
         stop = start + record_number
-        @info "start=$(start), stop=$(stop)"
         records = create_records(start=start, stop=stop)
         foreach(r -> push!(storage.data, r), records)
+        nothing, SUCCESS
+    end
+
+    function inspect_cache_ids()
+        cache_ids = map(c -> c.id, caches)
+        cache_ids, SUCCESS
+    end
+
+    function inspect_cache_data(cache_id::ServerID)
+        if haskey(cache_cluster_map, cache_id)
+            bucket = cache_cluster_map[cache_id].bucket
+            bucket, SUCCESS
+        else
+            nothing, NOT_FOUND
+        end
     end
 
     return TheSystem(
-        try_except(query),
-        try_except(cache_inspect),
+        try_except(get_record),
         try_except(add_records),
+        try_except(inspect_cache_ids),
+        try_except(inspect_cache_data),
         storage,
         table,
     )
