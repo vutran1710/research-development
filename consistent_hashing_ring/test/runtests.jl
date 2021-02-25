@@ -9,6 +9,7 @@ include("../src/cli.jl")
 logger = SimpleLogger()
 global_logger(logger)
 
+
 @testset "consistent-hashing system" begin
     # Given inputs ========================================================
     server_count = 4
@@ -17,7 +18,7 @@ global_logger(logger)
 
 
     # Setup ===============================================================
-    rec = create_records(record_count)
+    rec = create_records(start=1, stop=record_count+1)
     @test length(rec) == record_count
     @test rec[1] isa Record
 
@@ -55,25 +56,30 @@ global_logger(logger)
 
     # NOTE: Construct and query
     system = construct_system(storage, caches, table)
-    response = system.query(100)
+    response = system.api__query(100)
     @test response isa ResponseMessage
     @test response.data != nothing
     @test response.message == SUCCESS
 
-    response = system.query(101)
+    response = system.api__query(101)
     @test response isa ResponseMessage
     @test response.data == nothing
     @test response.message == SYSTEM_ERROR
 
-    response = system.query(-1)
+    response = system.api__query(-1)
     @test response isa ResponseMessage
     @test response.data == nothing
     @test response.message == NOT_FOUND
 
-    bucket = system.cache_inspect(caches[1].id)
+    response = system.api__cache_inspect(caches[1].id)
+    @test response.message == SUCCESS
+    bucket = response.data
     @test length(bucket) > 0
-end
 
+    @test length(system.storage.data) == 1000
+    system.api__add_records(130)
+    @test length(system.storage.data) == 1130
+end
 
 
 @testset "Plot utils" begin
@@ -99,20 +105,19 @@ end
 end
 
 
+# @testset "CLI command" begin
+#     input_cmnd = "/add"
+#     @test parse_command(input_cmnd) == ("add", nothing)
 
-@testset "CLI command" begin
-    input_cmnd = "/add"
-    @test parse_command(input_cmnd) == ("add", nothing)
+#     input_cmnd = "/a"
+#     @test parse_command(input_cmnd) == ("a", nothing)
 
-    input_cmnd = "/a"
-    @test parse_command(input_cmnd) == ("a", nothing)
+#     input_cmnd = "a"
+#     @test parse_command(input_cmnd) == (nothing, nothing)
 
-    input_cmnd = "a"
-    @test parse_command(input_cmnd) == (nothing, nothing)
+#     input_cmnd = ""
+#     @test parse_command(input_cmnd) == (nothing, nothing)
 
-    input_cmnd = ""
-    @test parse_command(input_cmnd) == (nothing, nothing)
-
-    input_cmnd = "/add 1"
-    @test parse_command(input_cmnd) == ("add", ["1"])
-end
+#     input_cmnd = "/add 1"
+#     @test parse_command(input_cmnd) == ("add", ["1"])
+# end

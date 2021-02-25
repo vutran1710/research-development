@@ -17,6 +17,7 @@ Type in command using one of the following:
 
 
 struct CLIMaster
+    construct::Any
     add::Any
     get::Any
     bucket::Any

@@ -18,7 +18,8 @@ struct CacheServer
     bucket::Dict{RecordID, Record}
 end
 
-struct PersistentStorage
+
+mutable struct PersistentStorage
     data::Array{Record}
 end
 
@@ -34,8 +35,11 @@ struct ResponseMessage
 end
 
 struct TheSystem
-    query::Any
-    cache_inspect::Any
+    api__query::Any
+    api__cache_inspect::Any
+    api__add_records::Any
+    storage::PersistentStorage
+    table::ConsistentHashingTable
 end
 
 struct Point

@@ -4,12 +4,14 @@ using Faker: first_name, last_name
 
 global_logger()
 
-function create_records(num::Integer)
-    ids = Iterators.Stateful(1:1000)
+
+# ARCHITECH
+function create_records(; start::Integer=1, stop::Integer=1000)
+    ids = Iterators.Stateful(start:stop)
     id = () -> popfirst!(ids)
     name = () -> "$(first_name()) $(last_name())"
     create_record = _ -> Record(id(), name())
-    map(create_record, 1:num)
+    map(create_record, 1:(stop-start))
 end
 
 
@@ -118,8 +120,19 @@ function construct_system(
         return ResponseMessage(nothing, NOT_FOUND)
     end
 
+    function add_records(record_number::Integer)
+        start = length(storage.data) + 1
+        stop = start + record_number
+        @info "start=$(start), stop=$(stop)"
+        records = create_records(start=start, stop=stop)
+        storage.data = vcat(storage.data, records)
+    end
+
     return TheSystem(
         try_except(query),
         try_except(cache_inspect),
+        try_except(add_records),
+        storage,
+        table,
     )
 end

@@ -15,6 +15,20 @@ global_logger(logger)
 
 pyplot()
 
+
+function construct(server_number::Integer, label_multiplier::Integer)
+    storage = PersistentStorage([])
+    caches = create_cache_servers(cache_count)
+    hash_table = consistent_hashing(caches, label_multiplier)
+    the_system = construct_system(storage, caches, hash_table)
+    return the_system
+end
+
+function add_records(storage::PersistentStorage)(record_number::Integer)
+    records = create_records(record_number)
+    push!(storage.data, records)
+end
+
 # ------------ config
 label_multiplier = 5
 cache_count = 3
@@ -24,17 +38,17 @@ record_count = 100
 rec = create_records(record_count)
 storage = PersistentStorage(rec)
 caches = create_cache_servers(cache_count)
-ch_table = consistent_hashing(caches, label_multiplier)
+hash_table = consistent_hashing(caches, label_multiplier)
 color_generator = Iterators.Stateful(distinguishable_colors(cache_count))
 color_map = Dict(s.id => popfirst!(color_generator) for s ∈ caches)
-the_system = construct_system(storage, caches, ch_table)
+the_system = construct_system(storage, caches, hash_table)
 
 # ------------ plotting setups
 default(legendfontsize=16, framestyle=:zerolines, tickfont=(12, :white))
 plot(sin, cos, 0, 2π, aspect_ratio=1, show=true, label=false, size = (700, 700))
 
 # ------------ plotting servers
-for (server_id, angles) in ch_table.server_map
+for (server_id, angles) in hash_table.server_map
     x_series, y_series = map(sin, angles), map(cos, angles)
     color = color_map[server_id]
 
@@ -73,7 +87,7 @@ pin_object(table::ConsistentHashingTable) = begin
 end
 
 
-add_points = (_...) -> pin_object(ch_table)
+add_points = (_...) -> pin_object(hash_table)
 
 inspect_cache_bucket = params -> begin
     cache_id = String(params)
