@@ -6,6 +6,12 @@ function run_forever(exec; before_cb=nothing, after_cb=nothing, delay::Int=0)
 
         result = exec()
 
+        if result == "EXIT"
+            println("exiting...")
+            sleep(0.1)
+            break
+        end
+
         if after_cb != nothing
             after_cb(result)
         end
@@ -65,6 +71,9 @@ function cli_render_introduction(cmd_maps)
     ----------------------------------------------
     $(reduce(combine, cmd_maps, init=""))/help
       #showing this dialog
+
+    /exit
+      #no description needed
     ==============================================
     """
 end
@@ -117,6 +126,10 @@ function ClientCLI(args...)
 
         if cmd == "help"
             return println(welcome)
+        end
+
+        if cmd == "exit"
+            return "EXIT"
         end
 
         if !haskey(cmd_dict, cmd)

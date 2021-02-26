@@ -7,7 +7,6 @@ using Logging
 using JSON
 # using Plots
 # using Colors
-using Transducers
 
 
 logger = SimpleLogger()
