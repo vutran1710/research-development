@@ -1,31 +1,21 @@
 welcome = """
-Type in command using one of the following:
-======================================================
-/add
-    # add 10 random points to the hashing ring
+    Type in command using one of the following:
+    ======================================================
+    /add
+        # add 10 random points to the hashing ring
 
-/get {record_id}
-    # get a specific record using its id
+    /get {record_id}
+        # get a specific record using its id
 
-/bucket {cache_id}
-    # listing all records in a specific cache's bucket
+    /bucket {cache_id}
+        # listing all records in a specific cache's bucket
 
-/help
-    # Show this dialog
-======================================================
-"""
+    /help
+        # Show this dialog
+    ======================================================
+    """
 
-
-struct CLIMaster
-    add::Any
-    get::Any
-    bucket::Any
-end
-
-
-run_forever(exec, before_cb=nothing, after_cb=nothing, delay::Int=0) = begin
-    print(welcome)
-
+function run_forever(exec; before_cb=nothing, after_cb=nothing, delay::Int=0)
     while true
         if before_cb != nothing
             before_cb()
@@ -42,44 +32,125 @@ run_forever(exec, before_cb=nothing, after_cb=nothing, delay::Int=0) = begin
 end
 
 
-handle_user_input = cli -> () ->  begin
-    print("command_input /")
-    str = readline()
-    splitted = split(str, " ")
+function parse_command(user_input)
+    splitted= split(user_input, " ")
     len = length(splitted)
 
     if len == 0
         return nothing, nothing
     end
 
-    cmd = Symbol(splitted[1])
-
-    if cmd == :help
-        return println(welcome)
+    if len == 1
+        return splitted[1], nothing
     end
 
-    if !hasproperty(cli, cmd)
-        @error "Invalid Command!"
-        return nothing
-    end
+    return splitted[1], splitted[2:end]
+end
 
-    args = len > 1 ? splitted[2:end] : []
 
-    try
-        println("~~~~~~~~~~~~~~~~~~~~~~ BEGIN")
-        caller = getfield(cli, cmd)
-        println(caller(args...))
-        println("~~~~~~~~~~~~~~~~~~~~~~ END")
-    catch e
-        @error "HandlerError > $(e)"
-    end
+function get_args_signatures(func)
+    func_info = collect(methods(func))
+    m = func_info[1]
+    parameters = map(r -> r, m.sig.parameters)
 
-    for _ in 1:3
-        # NOTE: separator between commands
-        println("")
+    if length(parameters) > 1
+        map(p -> p, parameters[2:end])
+    else
+        nothing
     end
 end
 
-function get_function_signature(x)
-    methods(x).ms[1].sig
+
+function cli_render_introduction(cmd_maps)
+    combine(r, element) = begin
+        cmd, pair = element
+        func, doc, type = pair["func"], pair["doc"], pair["type"]
+
+        if type == nothing
+            type = "None"
+        end
+
+        cmd_line = "/$(cmd) \n"
+        doc_line = "  #doc $(doc)\n"
+        arg_line = "  #args $(type)\n\n"
+        result = r * cmd_line * doc_line * arg_line
+        result
+    end
+
+    """
+    ================ ClientCLI ===================
+    ----------------------------------------------
+    $(reduce(combine, cmd_maps, init=""))/help
+      #showing this dialog
+    ==============================================
+    """
+end
+
+function arg_converter(type, arg)
+    if type == nothing
+        return nothing
+    end
+
+    if type == Integer
+        return parse(Int64, arg)
+    end
+
+    if type == String
+        return String(arg)
+    end
+end
+
+function make_command_dict(args...)
+    cmd_dict = Dict()
+    docs = []
+    for item in args
+        if item isa String
+            push!(docs, item)
+        else
+            cmd, handler = item
+            func, type = handler
+            controller = Dict("func" => func, "type" => type, "doc" => popfirst!(docs))
+            push!(cmd_dict, cmd => controller)
+        end
+    end
+    cmd_dict
+end
+
+
+function ClientCLI(args...)
+    cmd_dict = make_command_dict(args...)
+    welcome = cli_render_introduction(cmd_dict)
+    println(welcome)
+
+    handle() = begin
+        print("command /")
+        cmd, args = parse_command(readline())
+
+        if cmd == nothing
+            return println("")
+        end
+
+        if cmd == "help"
+            return println(welcome)
+        end
+
+        if !haskey(cmd_dict, cmd)
+            return println("Command does not exist")
+        end
+
+        println("~~~~~~~~~~~~~~~ BEGIN")
+        handler = cmd_dict[cmd]
+        func, type = handler["func"], handler["type"]
+
+        if !(type isa Array)
+            type = [type]
+        end
+
+        args = map(r -> arg_converter(r...), zip(type, args))
+        @info func(args...)
+        println("~~~~~~~~~~~~~~~ END")
+    end
+
+    insert_blank_lines = _ -> print("\n")
+    run_forever(handle; after_cb=insert_blank_lines)
 end

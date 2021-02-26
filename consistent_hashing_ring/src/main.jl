@@ -12,16 +12,8 @@ using Transducers
 
 logger = SimpleLogger()
 global_logger(logger)
-system = nothing
 
 # pyplot()
-function build(record_count::Integer, server_count::Integer, label_replica_count::Integer)
-    records = create_records(start=1, stop=record_count+1)
-    storage = PersistentStorage(records)
-    caches = create_cache_servers(server_count)
-    table = consistent_hashing(caches, label_replica_count)
-    system = TheSystem(storage, caches, table)
-end
 
 # # ------------ setup
 # color_generator = Iterators.Stateful(distinguishable_colors(cache_count))
@@ -89,7 +81,14 @@ end
 #     CLIMaster,
 # )(add_points, get_data, inspect_cache_bucket)
 
-construct_system()
-get_function_signature(build)
+system = construct(10, 3, 5)
+ClientCLI(
+    "Get a single record by its ID",
+    "get" => (system.api__get_record, Integer, Integer),
+    "Add a number of records to Store",
+    "add" => (system.api__add_records, Integer),
+    "Inspect a cache's bucket by its cache-id",
+    "bucket" => (system.inspect__cache_data, String),
+)
 
 end
