@@ -84,7 +84,7 @@ global_logger(logger)
 system = construct(10, 3, 5)
 ClientCLI(
     "Get a single record by its ID",
-    "get" => (system.api__get_record, Integer, Integer),
+    "get" => (system.api__get_record, Integer),
     "Add a number of records to Store",
     "add" => (system.api__add_records, Integer),
     "Inspect a cache's bucket by its cache-id",

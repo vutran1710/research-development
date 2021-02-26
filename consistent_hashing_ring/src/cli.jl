@@ -1,20 +1,3 @@
-welcome = """
-    Type in command using one of the following:
-    ======================================================
-    /add
-        # add 10 random points to the hashing ring
-
-    /get {record_id}
-        # get a specific record using its id
-
-    /bucket {cache_id}
-        # listing all records in a specific cache's bucket
-
-    /help
-        # Show this dialog
-    ======================================================
-    """
-
 function run_forever(exec; before_cb=nothing, after_cb=nothing, delay::Int=0)
     while true
         if before_cb != nothing
@@ -86,6 +69,7 @@ function cli_render_introduction(cmd_maps)
     """
 end
 
+
 function arg_converter(type, arg)
     if type == nothing
         return nothing
@@ -99,6 +83,7 @@ function arg_converter(type, arg)
         return String(arg)
     end
 end
+
 
 function make_command_dict(args...)
     cmd_dict = Dict()
