@@ -8,7 +8,7 @@ function run_forever(exec; before_cb=nothing, after_cb=nothing, delay::Int=0)
 
         if result == "EXIT"
             println("exiting...")
-            sleep(0.1)
+            sleep(0.5)
             break
         end
 
@@ -22,7 +22,7 @@ end
 
 
 function parse_command(user_input)
-    splitted= split(user_input, " ")
+    splitted = split(user_input, " ")
     len = length(splitted)
 
     if len == 0

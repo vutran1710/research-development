@@ -64,10 +64,6 @@ global_logger(logger)
 
 # add_points = (_...) -> 1
 
-# inspect_cache_bucket = params -> begin
-#     cache_id = String(params)
-#     the_system.cache_inspect(cache_id)
-# end
 
 # get_data = params -> begin
 #     record_id = parse(Int64, params[1])
@@ -78,7 +74,21 @@ global_logger(logger)
 #     run_forever,
 #     handle_user_input,
 #     CLIMaster,
-# )(add_points, get_data, inspect_cache_bucket)
+# )(add_points, get_data, get_bucket)
+
+# Composing api handlers
+get_bucket = cache_id -> begin
+    resp = system.inspect__cache_data(cache_id)
+
+    if resp.message == NOT_FOUND
+        resp = system.inspect__cache_ids()
+        @warn "Cache_id=$(cache_id) doesnt exist.\nAvailable IDS are $(resp.data)"
+        return nothing
+    end
+
+    return resp.data
+end
+
 
 system = construct(10, 3, 5)
 ClientCLI(
@@ -87,7 +97,7 @@ ClientCLI(
     "Add a number of records to Store",
     "add" => (system.api__add_records, Integer),
     "Inspect a cache's bucket by its cache-id",
-    "bucket" => (system.inspect__cache_data, String),
+    "bucket" => (get_bucket, String),
 )
 
 end
