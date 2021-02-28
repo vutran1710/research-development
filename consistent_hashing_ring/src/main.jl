@@ -76,7 +76,20 @@ global_logger(logger)
 #     CLIMaster,
 # )(add_points, get_data, get_bucket)
 
+system = construct(10, 3, 5)
+println("Init a System with 10 records - 3 cache-servers - 5 label-replicas")
+
 # Composing api handlers
+new_system = (a::Integer, b::Integer, c::Integer) -> begin
+    global system
+    println("Re-construct a whole new System")
+    println("--- $(a) records")
+    println("--- $(b) cache-servers")
+    println("--- $(c) label-replicas")
+    system = construct(a, b, c)
+    return nothing
+end
+
 get_bucket = cache_id -> begin
     resp = system.inspect__cache_data(cache_id)
 
@@ -90,8 +103,9 @@ get_bucket = cache_id -> begin
 end
 
 
-system = construct(10, 3, 5)
 ClientCLI(
+    "Re-construct a new System",
+    "new" => (new_system, [Integer, Integer, Integer]),
     "Get a single record by its ID",
     "get" => (system.api__get_record, Integer),
     "Add a number of records to Store",
