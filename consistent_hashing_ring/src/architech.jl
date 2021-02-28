@@ -103,11 +103,12 @@ function construct(record_count::Integer, server_count::Integer, label_replica_c
         bucket = cache_cluster_map[cache_id].bucket
 
         if haskey(bucket, id)
+            @info "Cache-hit!"
             record = bucket[id]
             return record, SUCCESS
         end
 
-        @warn "Not cached yet"
+        @warn "Cache-miss!"
         # NOTE: pull from cold-storage, then save to cache
         record = findfirst(r -> r.id == id, storage.data)
         record, record != nothing ? SUCCESS : NOT_FOUND
