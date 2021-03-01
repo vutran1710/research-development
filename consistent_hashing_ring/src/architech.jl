@@ -123,17 +123,12 @@ function construct(record_count::Integer, server_count::Integer, label_replica_c
     end
 
     function inspect_cache_ids()
-        cache_ids = map(c -> c.id, caches)
-        cache_ids, SUCCESS
+        keys(cache_cluster_map), SUCCESS
     end
 
     function inspect_cache_data(cache_id::ServerID)
-        if haskey(cache_cluster_map, cache_id)
-            bucket = cache_cluster_map[cache_id].bucket
-            bucket, SUCCESS
-        else
-            nothing, NOT_FOUND
-        end
+        bucket = get(cache_cluster_map, cache_id, nothing)
+        return bucket, bucket != nothing ? SUCCESS : NOT_FOUND
     end
 
     return TheSystem(
