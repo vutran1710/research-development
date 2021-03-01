@@ -93,11 +93,6 @@ function construct(record_count::Integer, server_count::Integer, label_replica_c
 
     function get_record(id::RecordID)
         @info "Querying record....: $(id)"
-
-        if id > 100
-            throw(DomainError(id, "ID too large... $(id) > 100"))
-        end
-
         hashed = hashing_oject(id)
         cache_id, _ = locate_cache(table, hashed)
         bucket = cache_cluster_map[cache_id].bucket
@@ -109,8 +104,13 @@ function construct(record_count::Integer, server_count::Integer, label_replica_c
         end
 
         @warn "Cache-miss!"
-        # NOTE: pull from cold-storage, then save to cache
-        record = findfirst(r -> r.id == id, storage.data)
+        record_idx = findfirst(r -> r.id == id, storage.data)
+        record = record_idx != nothing ? storage.data[record_idx] : nothing
+
+        if record != nothing
+            push!(bucket, id => record)
+        end
+
         record, record != nothing ? SUCCESS : NOT_FOUND
     end
 
