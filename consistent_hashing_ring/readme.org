@@ -36,5 +36,5 @@ Record<Person> {
 }
 #+end_src
 
-- Single **PersistentStorage** to store data<Record[]>
+- Single **Database** to store data<Record[]>
 - Multi CacheServer to serve requests

@@ -10,18 +10,18 @@ function create_records(; start::Integer=1, stop::Integer=1000)::Array{Record}
 end
 
 
-function init_storage(records::Array{Record})::PersistentStorage
+function init_db(records::Array{Record})::Database
     ids = map(r -> r.id, records)
     names = map(r -> r.name, records)
     table = Table(id=ids, name=names)
-    PersistentStorage(table)
+    Database(table)
 end
 
 
-function add_records(records::Array{Record}, storage::PersistentStorage)
+function add_records(records::Array{Record}, db::Database)
     for r in records
-        push!(storage.table.id, r.id)
-        push!(storage.table.name, r.name)
+        push!(db.table.id, r.id)
+        push!(db.table.name, r.name)
     end
 end
 
@@ -40,6 +40,8 @@ end
 
 
 function pin_servers(servers::Array{CacheServer})::Table
+    """ Pin servers' points over the hashing-ring evenly
+    """
     number = length(servers)
     segment_angle = 360 / number
     points = map(i -> round(i * segment_angle, digits=3), 0:(number-1))
@@ -48,32 +50,28 @@ function pin_servers(servers::Array{CacheServer})::Table
 end
 
 
-function locate_cache(hashed::Angle, server_table::Table)::Row
+function locate_cache(hashed::Angle, server_table::Table)::ServerID
     """ We find the nearest cache-id in the counter-clockwise direction
     whose angle is greater than the hashed
     """
-    last_row, first_row = server_table[end], server_table[1]
-
-    if hashed > last_row.angle
-        return first_row
-    end
-
-    idx = findfirst(row -> row.angle >= hashed, server_table)
-    row = server_table[idx]
-    return row
+    online_servers = server_table[server_table.online .== true]
+    servers = map(r -> (r.angle, r.server), online_servers)
+    sort!(servers, by=s -> s[1])
+    idx = findfirst(g -> g[1] >= hashed, servers)
+    idx != nothing ? servers[idx][2] : servers[1][2]
 end
 
 
 function derive_server_labels(server_table::Table, derive_labels::Integer)::Table
     labels, angles, server_ids = [], [], []
     chars = Iterators.Stateful('A':'Z')
-    segment_angle = rand(0:360)
+    segment_angle = rand(200:300)
 
     for row in server_table
         char = popfirst!(chars)
         for nth in 0:(derive_labels-1)
             label = "$(char)$(nth)"
-            angle = round(row.angle + nth * segment_angle, digits=3)
+            angle = round(mod(row.angle + nth * segment_angle, 360), digits=3)
             push!(labels, label)
             push!(angles, angle)
             push!(server_ids, row.server)
@@ -93,7 +91,7 @@ function construct(
     records = create_records(stop=number_of_records)
     caches = create_cache_servers(number_of_caches)
     cache_map = reduce((r, s) -> push!(r, s.id => s), caches, init=Dict())
-    storage = init_storage(records)
+    db = init_db(records)
     cache_table = pin_servers(caches)
     cache_hash_table = derive_server_labels(cache_table, number_of_labels)
 
@@ -104,23 +102,22 @@ function construct(
     println("> Cache Map -----------------------------------")
     pprint(cache_map)
     print("\n\n")
-    println("> Storage -------------------------------------")
-    pprint(storage.table)
+    println("> Database -------------------------------------")
+    pprint(db.table)
     print("\n\n")
     println("===============================================")
 
     api__get_record(id::RecordID) = begin
         hashed = hashing(id)
-        row = locate_cache(hashed, cache_hash_table)
-        cache_id = row.server
+        cache_id = locate_cache(hashed, cache_hash_table)
         cache_server = cache_map[cache_id]
         bucket = cache_server.bucket
 
         if !haskey(bucket, id)
             @info "Cache miss"
-            idx = findfirst(r -> r.id == id, storage.table)
+            idx = findfirst(r -> r.id == id, db.table)
             status = idx != nothing ? SUCCESS : NOT_FOUND
-            row = idx != nothing ? storage.table[idx] : nothing
+            row = idx != nothing ? db.table[idx] : nothing
 
             if row != nothing
                 @info "Caching record_id=$(id) to $(cache_id)"
@@ -135,11 +132,11 @@ function construct(
     end
 
     api__add_records(number::Integer) = begin
-        start = length(storage.table) + 1
+        start = length(db.table) + 1
         stop = start + number - 1
         new_records = create_records(start=start, stop=stop)
-        add_records(new_records, storage)
-        println(storage.table)
+        add_records(new_records, db)
+        println(db.table)
     end
 
     inspect__cache_data(cache_id::ServerID) = begin
@@ -153,7 +150,7 @@ function construct(
         api__get_record,
         api__add_records,
         inspect__cache_data,
-        storage,
+        db,
         cache_hash_table,
     )
 end

@@ -18,7 +18,7 @@ struct CacheServer
     bucket::Dict{RecordID, Record}
 end
 
-struct PersistentStorage
+struct Database
     table::Table
 end
 
@@ -31,7 +31,7 @@ struct TheSystem
     api__get_record::Any
     api__add_records::Any
     inspect__cache_data::Any
-    storage::PersistentStorage
+    db::Database
     table::Table
 end
 

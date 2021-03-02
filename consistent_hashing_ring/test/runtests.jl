@@ -22,7 +22,7 @@ global_logger(logger)
     @test length(rec) == record_count
     @test rec[1] isa Record
 
-    storage = PersistentStorage(rec)
+    db = Database(rec)
     @test length(storage.data) == record_count
     @test storage.data[1].id isa Integer
     @test storage.data[1].name isa String
