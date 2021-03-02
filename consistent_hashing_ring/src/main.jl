@@ -1,10 +1,15 @@
 module main
+using Logging
+using JSON
+using TypedTables
+using UUIDs: uuid1
+using Faker: first_name, last_name
+
 include("structs.jl")
 include("architech.jl")
 # include("plotf.jl")
-include("cli.jl")
-using Logging
-using JSON
+# include("cli.jl")
+
 # using Plots
 # using Colors
 
@@ -76,42 +81,49 @@ global_logger(logger)
 #     CLIMaster,
 # )(add_points, get_data, get_bucket)
 
-system = construct(10, 3, 5)
-println("Init a System with 10 records - 3 cache-servers - 5 label-replicas")
+# system = construct(10, 3, 5)
+# println("Init a System with 10 records - 3 cache-servers - 5 label-replicas")
 
-# Composing api handlers
-new_system = (a::Integer, b::Integer, c::Integer) -> begin
-    global system
-    println("Re-construct a whole new System")
-    println("--- $(a) records")
-    println("--- $(b) cache-servers")
-    println("--- $(c) label-replicas")
-    system = construct(a, b, c)
-    return nothing
-end
+# # Composing api handlers
+# new_system = (a::Integer, b::Integer, c::Integer) -> begin
+#     global system
+#     println("Re-construct a whole new System")
+#     println("--- $(a) records")
+#     println("--- $(b) cache-servers")
+#     println("--- $(c) label-replicas")
+#     system = construct(a, b, c)
+#     return nothing
+# end
 
-get_bucket = cache_id -> begin
-    resp = system.inspect__cache_data(cache_id)
+# get_bucket = cache_id -> begin
+#     resp = system.inspect__cache_data(cache_id)
 
-    if resp.message == NOT_FOUND
-        resp = system.inspect__cache_ids()
-        @warn "Cache_id=$(cache_id) doesnt exist.\nAvailable IDS are $(resp.data)"
-        return nothing
-    end
+#     if resp.message == NOT_FOUND
+#         resp = system.inspect__cache_ids()
+#         @warn "Cache_id=$(cache_id) doesnt exist.\nAvailable IDS are $(resp.data)"
+#         return nothing
+#     end
 
-    return resp.data
-end
+#     return resp.data
+# end
 
 
-ClientCLI(
-    "Re-construct a new System",
-    "new" => (new_system, [Integer, Integer, Integer]),
-    "Get a single record by its ID",
-    "get" => (system.api__get_record, Integer),
-    "Add a number of records to Store",
-    "add" => (system.api__add_records, Integer),
-    "Inspect a cache's bucket by its cache-id",
-    "bucket" => (get_bucket, String),
-)
+# ClientCLI(
+#     "Re-construct a new System",
+#     "new" => (new_system, [Integer, Integer, Integer]),
+#     "Get a single record by its ID",
+#     "get" => (system.api__get_record, Integer),
+#     "Add a number of records to Store",
+#     "add" => (system.api__add_records, Integer),
+#     "Inspect a cache's bucket by its cache-id",
+#     "bucket" => (get_bucket, String),
+# )
 
+recs = create_records()
+svrs = create_cache_servers(4)
+table = pin_servers(svrs)
+println(table)
+println(locate_cache(hashing(330), table))
+table = derive_server_labels(table, 10)
+println(table)
 end

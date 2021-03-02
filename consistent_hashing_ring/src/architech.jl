@@ -1,12 +1,7 @@
-using Logging
-using UUIDs: uuid1
-using Faker: first_name, last_name
-
-global_logger()
-
-
 # ARCHITECH
-function create_records(; start::Integer=1, stop::Integer=1000)
+Row = NamedTuple
+
+function create_records(; start::Integer=1, stop::Integer=1000)::Array{Record}
     ids = Iterators.Stateful(start:stop)
     id = () -> popfirst!(ids)
     name = () -> "$(first_name()) $(last_name())"
@@ -15,128 +10,59 @@ function create_records(; start::Integer=1, stop::Integer=1000)
 end
 
 
-function create_cache_servers(num::Integer)
+function create_cache_servers(num::Integer)::Array{CacheServer}
     ids = [string(uuid1())[end-5:end] for _=1:num]
-    id = () -> "cache-$(popfirst!(ids))"
+    id = () -> popfirst!(ids)
     create_server = _ -> CacheServer(id(), Dict())
     map(create_server, 1:num)
 end
 
 
-function consistent_hashing(servers::Array{CacheServer}, label_multiplier::Integer)
-    count = length(servers)
-    @assert mod(count + label_multiplier, min(label_multiplier, count)) !== 0
-    angle_block = 2π / count
-    angle_step = 2π / (count * label_multiplier)
-    angle_map = Dict()
-    angle_list = []
-    server_map = Dict()
-
-    for i in 1:count
-        id = servers[i].id
-        base_angle = (i - 1) * angle_block
-        angle_group = []
-
-        for j in 1:label_multiplier
-            real_angle = base_angle + j * count * angle_step
-            angle = round(mod(real_angle, 2π), digits=3)
-            angle_map[angle] = id
-            push!(angle_group, angle)
-            push!(angle_list, angle)
-        end
-
-        server_map[id] = angle_group
-        sort!(angle_list)
-    end
-
-    return ConsistentHashingTable(angle_map, angle_list, server_map)
+function hashing(number::Integer)::Angle
+    mod(deg2rad(number), 2π)
 end
 
 
-function hashing_oject(record_id::RecordID)::Angle
-    # NOTE: multiply by 5 so the degree will increase faster
-    # and thus more evenly distributed
-    pi_angle = record_id * 5 * π / 180
-    return round(mod(pi_angle, 2π), digits=3)
+function pin_servers(servers::Array{CacheServer})::Table
+    number = length(servers)
+    segment_angle = 2π / number
+    points = map(i -> round(i * segment_angle, digits=3), 0:(number-1))
+    server_ids = map(s -> s.id, servers)
+    Table(server_id=server_ids, angle=points)
 end
 
 
-function locate_cache(table::ConsistentHashingTable, hashed::Angle)
-    idx = findfirst(angle -> angle ≥ hashed, table.list)
+function locate_cache(hashed::Angle, server_table::Table)::Row
+    """ We find the nearest cache-id in the counter-clockwise direction
+    whose angle is greater than the hashed
+    """
+    last_row, first_row = server_table[end], server_table[1]
 
-    if idx == nothing
-        idx = 1
+    if hashed > last_row.angle
+        return first_row
     end
 
-    angle = table.list[idx]
-    cache = table.map[angle]
-    return cache, angle
+    idx = findfirst(row -> row.angle >= hashed, server_table)
+    row = server_table[idx]
+    return row
 end
 
 
-function construct(record_count::Integer, server_count::Integer, label_replica_count::Integer)::TheSystem
-    records = create_records(start=1, stop=record_count+1)
-    storage = PersistentStorage(records)
-    caches = create_cache_servers(server_count)
-    table = consistent_hashing(caches, label_replica_count)
-    cache_cluster_map = Dict(svr.id => svr for svr ∈ caches)
+function derive_server_labels(server_table::Table, derive_labels::Integer)::Table
+    labels, angles, server_ids = [], [], []
+    chars = Iterators.Stateful('A':'Z')
+    segment_angle = deg2rad(rand(0:360))
 
-    try_except = handler -> (params...) -> begin
-        try
-            result, status = handler(params...)
-            ResponseMessage(result, status)
-        catch e
-            @error (e)
-            ResponseMessage(nothing, SYSTEM_ERROR)
+    for row in server_table
+        char = popfirst!(chars)
+        for nth in 0:(derive_labels-1)
+            label = "$(char)$(nth)"
+            angle = round(row.angle + nth * segment_angle, digits=3)
+            push!(labels, label)
+            push!(angles, angle)
+            push!(server_ids, row.server_id)
         end
     end
-
-    function get_record(id::RecordID)
-        @info "Querying record....: $(id)"
-        hashed = hashing_oject(id)
-        cache_id, _ = locate_cache(table, hashed)
-        bucket = cache_cluster_map[cache_id].bucket
-
-        if haskey(bucket, id)
-            @info "Cache-hit!"
-            record = bucket[id]
-            return record, SUCCESS
-        end
-
-        @warn "Cache-miss!"
-        record_idx = findfirst(r -> r.id == id, storage.data)
-        record = record_idx != nothing ? storage.data[record_idx] : nothing
-
-        if record != nothing
-            push!(bucket, id => record)
-        end
-
-        record, record != nothing ? SUCCESS : NOT_FOUND
-    end
-
-    function add_records(record_number::Integer)
-        start = length(storage.data) + 1
-        stop = start + record_number
-        records = create_records(start=start, stop=stop)
-        foreach(r -> push!(storage.data, r), records)
-        nothing, SUCCESS
-    end
-
-    function inspect_cache_ids()
-        keys(cache_cluster_map), SUCCESS
-    end
-
-    function inspect_cache_data(cache_id::ServerID)
-        bucket = get(cache_cluster_map, cache_id, nothing)
-        return bucket, bucket != nothing ? SUCCESS : NOT_FOUND
-    end
-
-    return TheSystem(
-        try_except(get_record),
-        try_except(add_records),
-        try_except(inspect_cache_ids),
-        try_except(inspect_cache_data),
-        storage,
-        table,
-    )
+    online_stat = map(_ -> true, 1:length(server_ids))
+    Table(label=labels, angle=angles, server=server_ids, online=online_stat)
 end
