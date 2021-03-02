@@ -448,6 +448,11 @@ git-tree-sha1 = "3acf7ee21b0c0ea99ef0815e7768c1c0fde82629"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 version = "1.10.2"
 
+[[PrettyPrinting]]
+git-tree-sha1 = "024b75ae333df50ab552fd78727ad3279beac871"
+uuid = "54e16d92-306c-5ea0-a30b-337be88ac337"
+version = "0.2.1"
+
 [[Printf]]
 deps = ["Unicode"]
 uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"

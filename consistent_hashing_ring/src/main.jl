@@ -2,6 +2,7 @@ module main
 using Logging
 using JSON
 using TypedTables
+using PrettyPrinting
 using UUIDs: uuid1
 using Faker: first_name, last_name
 
@@ -119,11 +120,6 @@ global_logger(logger)
 #     "bucket" => (get_bucket, String),
 # )
 
-recs = create_records()
-svrs = create_cache_servers(4)
-table = pin_servers(svrs)
-println(table)
-println(locate_cache(hashing(330), table))
-table = derive_server_labels(table, 10)
-println(table)
+api = construct(10, 4, 5)
+api(3)
 end
