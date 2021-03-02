@@ -5,6 +5,7 @@ using TypedTables
 using PrettyPrinting
 using UUIDs: uuid1
 using Faker: first_name, last_name
+using Test
 
 include("structs.jl")
 include("architech.jl")
@@ -120,6 +121,10 @@ global_logger(logger)
 #     "bucket" => (get_bucket, String),
 # )
 
-api = construct(10, 4, 5)
-api(3)
+system = construct(10, 4, 5)
+@info system.api__get_record(2)
+@info system.api__add_records(4)
+@info system.api__get_record(2)
+
+
 end

@@ -19,13 +19,7 @@ struct CacheServer
 end
 
 struct PersistentStorage
-    data::Array{Record}
-end
-
-struct ConsistentHashingTable
-    map::Dict{Angle, ServerID}
-    list::Array{Angle}
-    server_map::Dict{ServerID, Array{Angle}}
+    table::Table
 end
 
 struct ResponseMessage
@@ -36,10 +30,9 @@ end
 struct TheSystem
     api__get_record::Any
     api__add_records::Any
-    inspect__cache_ids::Any
     inspect__cache_data::Any
     storage::PersistentStorage
-    table::ConsistentHashingTable
+    table::Table
 end
 
 struct Point

@@ -6,7 +6,23 @@ function create_records(; start::Integer=1, stop::Integer=1000)::Array{Record}
     id = () -> popfirst!(ids)
     name = () -> "$(first_name()) $(last_name())"
     create_record = _ -> Record(id(), name())
-    map(create_record, 1:(stop-start))
+    map(create_record, 1:(stop-start+1))
+end
+
+
+function init_storage(records::Array{Record})::PersistentStorage
+    ids = map(r -> r.id, records)
+    names = map(r -> r.name, records)
+    table = Table(id=ids, name=names)
+    PersistentStorage(table)
+end
+
+
+function add_records(records::Array{Record}, storage::PersistentStorage)
+    for r in records
+        push!(storage.table.id, r.id)
+        push!(storage.table.name, r.name)
+    end
 end
 
 
@@ -77,7 +93,7 @@ function construct(
     records = create_records(stop=number_of_records)
     caches = create_cache_servers(number_of_caches)
     cache_map = reduce((r, s) -> push!(r, s.id => s), caches, init=Dict())
-    storage = PersistentStorage(records)
+    storage = init_storage(records)
     cache_table = pin_servers(caches)
     cache_hash_table = derive_server_labels(cache_table, number_of_labels)
 
@@ -89,7 +105,7 @@ function construct(
     pprint(cache_map)
     print("\n\n")
     println("> Storage -------------------------------------")
-    pprint(storage.data)
+    pprint(storage.table)
     print("\n\n")
     println("===============================================")
 
@@ -102,10 +118,42 @@ function construct(
 
         if !haskey(bucket, id)
             @info "Cache miss"
+            idx = findfirst(r -> r.id == id, storage.table)
+            status = idx != nothing ? SUCCESS : NOT_FOUND
+            row = idx != nothing ? storage.table[idx] : nothing
+
+            if row != nothing
+                @info "Caching record_id=$(id) to $(cache_id)"
+                push!(bucket, id => Record(id, row.name))
+            end
+
+            ResponseMessage(Record(row.id, row.name), status)
         else
             @info "Cache hit"
+            ResponseMessage(bucket[id], SUCCESS)
         end
     end
 
-    return api__get_record
+    api__add_records(number::Integer) = begin
+        start = length(storage.table) + 1
+        stop = start + number - 1
+        new_records = create_records(start=start, stop=stop)
+        add_records(new_records, storage)
+        println(storage.table)
+    end
+
+    inspect__cache_data(cache_id::ServerID) = begin
+        if !hashkey(cache_map, cache_id)
+            @error "Cache-ID=$(cache_id) does not exist"
+        end
+        cache_map[cache_id].bucket
+    end
+
+    TheSystem(
+        api__get_record,
+        api__add_records,
+        inspect__cache_data,
+        storage,
+        cache_hash_table,
+    )
 end
