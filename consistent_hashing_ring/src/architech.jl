@@ -102,7 +102,7 @@ function construct(
     println("> Cache Map -----------------------------------")
     pprint(cache_map)
     print("\n\n")
-    println("> Database -------------------------------------")
+    println("> Database ------------------------------------")
     pprint(db.table)
     print("\n\n")
     println("===============================================")
