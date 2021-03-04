@@ -15,6 +15,14 @@
    - Fire requests again, print changes/rehashing
 
 ** Setup
+Installing dependencies
+#+begin_src shell
+$ julia --project=.
+# in julia interactive env
+pkg> dev --local
+#+end_src
+
+
 Running
 #+begin_src shell
 $ julia --project=. src/main.jl
@@ -26,15 +34,28 @@ $ julia --project=. test/runtests.jl
 #+end_src
 
 
-** Architecture
+** Usage
+`main.jl` provide a simple command-line-interface
 
-- Data
-#+begin_src json
-Record<Person> {
-   id: Integer
-   name: String
-}
-#+end_src
+```shell
+================ ClientCLI ===================
+----------------------------------------------
+/new
+  #doc Re-construct a new System
+  #args DataType[Integer, Integer, Integer]
 
-- Single **Database** to store data<Record[]>
-- Multi CacheServer to serve requests
+/add
+  #doc Add a number of records to Store
+  #args Integer
+
+/get
+  #doc Get a single record by its ID
+  #args Integer
+
+/help
+  #showing this dialog
+
+/exit
+  #no description needed
+==============================================
+```
