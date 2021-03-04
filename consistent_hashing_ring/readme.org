@@ -58,4 +58,8 @@ $ julia --project=. test/runtests.jl
 /exit
   #no description needed
 ==============================================
+# waiting for user to type in command and arguments
+command /
+
+
 #+end_src
