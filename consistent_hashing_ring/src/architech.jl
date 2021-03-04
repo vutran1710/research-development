@@ -1,6 +1,4 @@
 # ARCHITECH
-Row = NamedTuple
-
 function create_records(; start::Integer=1, stop::Integer=1000)::Array{Record}
     ids = Iterators.Stateful(start:stop)
     id = () -> popfirst!(ids)
@@ -11,8 +9,8 @@ end
 
 
 function init_db(records::Array{Record})::Database
-    ids = map(r -> r.id, records)
-    names = map(r -> r.name, records)
+    ids = map(getproperty(:id), records)
+    names = map(getproperty(:name), records)
     table = Table(id=ids, name=names)
     Database(table)
 end
@@ -40,13 +38,12 @@ end
 
 
 function pin_servers(servers::Array{CacheServer})::Table
-    """ Pin servers' points over the hashing-ring evenly
+    """ Pin servers' points over the hashing-ring randomly
     """
-    number = length(servers)
-    segment_angle = 360 / number
-    points = map(i -> round(i * segment_angle, digits=3), 0:(number-1))
-    server_ids = map(s -> s.id, servers)
-    Table(server=server_ids, angle=points)
+    count = length(servers)
+    ids = map(getproperty(:id), servers)
+    angles = rand(0:360, count)
+    Table(server=ids, angle=angles)
 end
 
 
@@ -56,30 +53,31 @@ function locate_cache(hashed::Angle, server_table::Table)::ServerID
     """
     online_servers = server_table[server_table.online .== true]
     servers = map(r -> (r.angle, r.server), online_servers)
-    sort!(servers, by=s -> s[1])
+    sort!(servers, by=first)
     idx = findfirst(g -> g[1] >= hashed, servers)
     idx != nothing ? servers[idx][2] : servers[1][2]
 end
 
 
-function derive_server_labels(server_table::Table, derive_labels::Integer)::Table
-    labels, angles, server_ids = [], [], []
-    chars = Iterators.Stateful('A':'Z')
-    segment_angle = rand(200:300)
+function derive_server_labels(server_table::Table, label_count::Integer)::Table
+    server_count = length(server_table)
+    chars = Iterators.Stateful(('A':'Z')[begin:server_count])
+    flatmap(fmap, iter) = collect(Iterators.flatten(map(fmap, iter)))
 
-    for row in server_table
+    derive_labels(row) = begin
         char = popfirst!(chars)
-        for nth in 0:(derive_labels-1)
-            label = "$(char)$(nth)"
-            angle = round(mod(row.angle + nth * segment_angle, 360), digits=3)
-            push!(labels, label)
-            push!(angles, angle)
-            push!(server_ids, row.server)
-        end
+        map(i -> char * repr(i), 1:label_count)
     end
 
-    online_stat = map(_ -> true, 1:length(server_ids))
-    Table(label=labels, angle=angles, server=server_ids, online=online_stat)
+    derive_angles(row) = rand(0:360, label_count)
+    repeat_server_id(row) = repeat([row.server], label_count)
+
+    labels = flatmap(derive_labels, server_table)
+    angles = flatmap(derive_angles, server_table)
+    ids = flatmap(repeat_server_id, server_table)
+    online = repeat([true], server_count * label_count)
+
+    Table(label=labels, angle=angles, server=ids, online=online)
 end
 
 
@@ -97,6 +95,9 @@ function construct(
 
     println("============== System Components ==============")
     println("> Cache Hash Table ----------------------------")
+    print(cache_table)
+    print("\n\n")
+    println("> Cache Hash Table with derived Labels --------")
     print(cache_hash_table)
     print("\n\n")
     println("> Cache Map -----------------------------------")
